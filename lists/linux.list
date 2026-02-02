@@ -1,0 +1,24 @@
+# Linux package list
+# Format: one package per line, comments start with #
+# Install via apt/dnf/pacman depending on distribution
+
+# Core development tools
+git
+curl
+wget
+build-essential
+
+# Modern CLI tools
+ripgrep
+fd-find
+bat
+exa
+
+# Text editors
+neovim
+
+# Shell
+zsh
+
+# Terminal multiplexer
+tmux

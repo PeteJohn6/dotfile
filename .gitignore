@@ -1,0 +1,16 @@
+.tree
+# Dotter local configuration (machine-specific)
+.dotter/local.toml
+.dotter/cache.toml
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

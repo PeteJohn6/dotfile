@@ -1,0 +1,33 @@
+# Example .gitconfig
+# This will be symlinked to ~/.gitconfig via dotter
+
+[user]
+    # Customize these values
+    name = Your Name
+    email = your.email@example.com
+
+[core]
+    editor = nvim
+    autocrlf = input
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = false
+
+[push]
+    default = simple
+    autoSetupRemote = true
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    visual = log --graph --oneline --all
+
+[color]
+    ui = auto

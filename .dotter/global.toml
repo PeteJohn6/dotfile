@@ -1,0 +1,32 @@
+# Dotter global configuration
+# See: https://github.com/SuperCuber/dotter/wiki
+
+[helpers]
+
+[default]
+depends = []
+
+[default.files]
+# Default files section - can be overridden per package
+
+# Platform-specific profiles
+[linux]
+[macos]
+[windows]
+
+# Package mappings
+[files]
+packages/git/.gitconfig = "~/.gitconfig"
+
+# Neovim - platform-specific paths
+[files.packages/nvim]
+type = "symbolic"
+
+[linux.files.packages/nvim]
+target = "~/.config/nvim"
+
+[macos.files.packages/nvim]
+target = "~/.config/nvim"
+
+[windows.files.packages/nvim]
+target = "~/AppData/Local/nvim"
