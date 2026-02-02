@@ -2,6 +2,29 @@
 
 This directory contains scripts that run **after** dotfiles are deployed via dotter.
 
+**Architecture**:
+1. **Orchestrator Script** (`script/post/post.{sh,ps1}`):
+   - Discovers all executable scripts in `script/post/`
+   - Executes them in order
+   - Handles errors and logging
+
+2. **Implementation Scripts** (e.g., `script/post/nvim-setup.sh`):
+   - Perform specific post-installation tasks
+   - Should be idempotent
+   - Should check prerequisites (e.g., is neovim installed?)
+
+**Example Use Cases**:
+- Installing Neovim plugins after config is linked
+- Compiling native extensions
+- Running health checks
+- Setting up shell completions
+
+**Implementation Notes**:
+- Keep scripts focused - one responsibility per script
+- Name scripts descriptively (e.g., `nvim-plugins.sh`, `shell-completions.sh`)
+- Log progress clearly
+- Exit with non-zero code on critical failures
+
 ## Purpose
 
 Post-installation scripts handle tasks that must run after symlinks are created:

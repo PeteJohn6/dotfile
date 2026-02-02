@@ -26,23 +26,46 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
     - macOS:
         - homebrew
 
+### Package Lists Format
+
+Package lists are stored in `lists/<platform>.list`:
+- `lists/linux.list` - Packages for apt/dnf/pacman
+- `lists/macos.list` - Packages for Homebrew
+- `lists/windows.list` - Packages for winget/chocolatey/scoop
+
+Format:
+- One package per line
+- Comments start with `#`
+- Empty lines are ignored
+- Whitespace is trimmed
+
 ### Workflow
 
-1. **Bootstrap** (`bootstrap/bootstrap.sh` | `bootstrap.ps1`)
+1. **Bootstrap**
+    - Linux: `bootstrap/bootstrap-linux.sh`
+    - macOS: `bootstrap/bootstrap-macos.sh`
+    - Windows: `bootstrap/bootstrap.ps1`
+
     a. Sets up environment variables if needed
     b. Installs a package manager on macOS/Windows if needed
     c. Uses the package manager to install: `just` (task runner) and `dotter` (dotfiles manager)
 
 2. `just` runs the following tasks in order:
-    1. **Install** (`scripts/install/*.{sh,ps1}`)
+    1. **Install** (`script/install/*.{sh,ps1}`)
         a. Parses platform-specific package lists from `lists/<platform>.list`
         b. Installs tools via package managers (apt/dnf/pacman/brew/winget/choco)
 
     2. **Stow** (via `dotter`)
 
-    3. **Post** (`scripts/post/post.{sh,ps1}`)
-        - Runs all `*.sh` (Unix) or `*.ps1` (Windows) scripts in `scripts/post/`
+    3. **Post** (`script/post/post.{sh,ps1}`)
+        - Runs all `*.sh` (Unix) or `*.ps1` (Windows) scripts in `script/post/`
         - Executes after dotfiles are linked (e.g., installing Neovim plugins)
+
+### Design Principles
+
+1. **Idempotency**: All scripts can be run multiple times safely
+2. **Platform Detection**: Scripts auto-detect the platform
+3. **Error Handling**: Fail fast with clear error messages
 
 ### Folder Layout
 
@@ -53,15 +76,44 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 |   |-- bootstrap-macos.sh   # macOS dependency bootstrap
 |   |-- bootstrap-linux.sh   # Linux dependency bootstrap
 |   `-- bootstrap.ps1        # Windows dependency bootstrap
-|-- lists                    # 
-|-- scripts/
+|-- lists/                   # Platform-specific package lists (*.list files)
+|-- script/
 |   |-- install/             # platform-specific install scripts
 |   `-- post/                # post scripts to run after stowing
 |-- packages/                # package's configurations
 |-- README.md                # overview and usage for users
 ```
 
-## Detail
+## Implementation Guidelines
+
+### Bootstrap Scripts
+
+Bootstrap scripts prepare the system with minimal dependencies (package manager, just, dotter).
+
+see `bootstrap/CLAUDE.md` for detailed bootstrap notes.
+
+### Install Scripts
+
+Install scripts read package lists and install software using platform-specific package managers.
+
+**Invocation**: Called by `just install`
+
+see `script/install/CLAUDE.md` for detailed install notes.
+
+### Post Scripts
+
+Post scripts run after dotfiles are deployed to perform additional setup (e.g., installing plugins, compiling tools).
+
+**Invocation**: Called by `just post`
+
+see `script/post/CLAUDE.md` for detailed post-installation notes.
+
+### README
+
+1. Installed programs are presented through a table
+
+
+## Reference
 
 ### Justfile
 
@@ -71,11 +123,7 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 
 - See `.dotter/CLAUDE.md` for detailed `dotter` notes
 
-## post-installation
-
-- See `scripts/post/CLAUDE.md` for detailed post-installation notes
-
-## Goal:
+## Final goal:
 
 1. `just` provides:
 
@@ -93,6 +141,6 @@ just uninstall   # dotter uninstall --verbose
 
 2. Each `just` step must be idempotent.
 
-## Development Notes:
+## Must care for:
 
 1. Keep maintained packages and the README in sync
