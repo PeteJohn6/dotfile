@@ -48,12 +48,15 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 
 ```
 |-- justfile                 # install/stow/post orchestration
-|-- dotter/                 # dotter profiles
-|-- install/                 # platform-specific install scripts
+|-- .dotter/                 # dotter profiles
 |-- bootstrap/
-|   |-- bootstrap.sh         # macOS/Linux dependency bootstrap
+|   |-- bootstrap-macos.sh   # macOS dependency bootstrap
+|   |-- bootstrap-linux.sh   # Linux dependency bootstrap
 |   `-- bootstrap.ps1        # Windows dependency bootstrap
-|-- post/                    # post scripts to run after stowing
+|-- lists                    # 
+|-- scripts/
+|   |-- install/             # platform-specific install scripts
+|   `-- post/                # post scripts to run after stowing
 |-- packages/                # package's configurations
 |-- README.md                # overview and usage for users
 ```
