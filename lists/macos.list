@@ -1,0 +1,7 @@
+# macOS Package List
+# Packages to install via Homebrew
+
+# Essential development tools
+git
+neovim
+ripgrep

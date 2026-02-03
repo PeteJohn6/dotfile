@@ -15,18 +15,22 @@ depends = []
 [windows]
 
 # Package mappings
+# Note: Package configurations are not yet implemented
+# Uncomment and add package paths as you create them in the packages/ directory
+
 [files]
-packages/git/.gitconfig = "~/.gitconfig"
+# Example package mappings (commented out until packages are created):
+# packages/git/.gitconfig = "~/.gitconfig"
 
-# Neovim - platform-specific paths
-[files.packages/nvim]
-type = "symbolic"
-
-[linux.files.packages/nvim]
-target = "~/.config/nvim"
-
-[macos.files.packages/nvim]
-target = "~/.config/nvim"
-
-[windows.files.packages/nvim]
-target = "~/AppData/Local/nvim"
+# Neovim - platform-specific paths (commented out until package is created):
+# [files.packages/nvim]
+# type = "symbolic"
+#
+# [linux.files.packages/nvim]
+# target = "~/.config/nvim"
+#
+# [macos.files.packages/nvim]
+# target = "~/.config/nvim"
+#
+# [windows.files.packages/nvim]
+# target = "~/AppData/Local/nvim"

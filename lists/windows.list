@@ -1,0 +1,7 @@
+# Windows Package List
+# Packages to install via winget/chocolatey/scoop
+
+# Essential development tools
+git
+neovim
+ripgrep
