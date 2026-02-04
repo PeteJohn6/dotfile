@@ -288,6 +288,12 @@ bootstrap_macos() {
 
 main() {
     echo "[bootstrap] Starting bootstrap process..."
+
+    # Navigate to repository root (parent of script directory)
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+    cd "$REPO_ROOT"
+    echo "[bootstrap] Working directory: $REPO_ROOT"
     echo ""
 
     # Setup bin directory

@@ -10,6 +10,11 @@ function Warn($msg) { Write-Warning "[bootstrap] $msg" }
 function Err($msg)  { Write-Error "[bootstrap] $msg"; exit 1 }
 
 Log "Starting bootstrap process..."
+
+# Navigate to repository root (parent of script directory)
+$repoRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $repoRoot
+Log "Working directory: $repoRoot"
 Write-Host ""
 
 # Setup bin directory
@@ -20,8 +25,8 @@ if (-not (Test-Path "bin")) {
 
 # Add to .gitignore if not already present
 if (Test-Path ".gitignore") {
-    $gitignoreContent = Get-Content ".gitignore" -Raw -ErrorAction SilentlyContinue
-    if ($gitignoreContent -notmatch "^bin/") {
+    $gitignoreLines = Get-Content ".gitignore" -ErrorAction SilentlyContinue
+    if ($gitignoreLines -notcontains "bin/") {
         Add-Content -Path ".gitignore" -Value "bin/"
         Log "Added bin/ to .gitignore"
     }
@@ -87,7 +92,7 @@ else {
         # Download dotter binary for Windows
         $dotterUrl = "https://github.com/SuperCuber/dotter/releases/download/v${dotterVersion}/dotter-windows-x64.exe"
 
-        Invoke-WebRequest -Uri $dotterUrl -OutFile "bin\dotter.exe" -UseBasicParsing
+        Invoke-WebRequest -Uri $dotterUrl -OutFile "bin\dotter.exe"
 
         Log "dotter downloaded successfully: $(& bin\dotter.exe --version)"
     }
