@@ -1,0 +1,8 @@
+# Windows configuration
+# This file is included from local.toml and overrides Windows-specific paths
+# Do not define 'packages' here - only in local.toml
+
+
+# Neovim package (Windows-specific path)
+[nvim.files]
+"packages/nvim" = "~/AppData/Local/nvim"

@@ -3,34 +3,20 @@
 
 [helpers]
 
-[default]
+# Git package - platform-agnostic configuration
+[git]
 depends = []
 
-[default.files]
-# Default files section - can be overridden per package
+[git.files]
+"packages/git/.gitconfig" = "~/.gitconfig"
+"packages/git/.gitignore_global" = "~/.gitconfig/.gitignore_global"
+"packages/git/.gitattributes" = "~/.gitconfig/.gitattributes"
 
-# Platform-specific profiles
-[linux]
-[macos]
-[windows]
 
-# Package mappings
-# Note: Package configurations are not yet implemented
-# Uncomment and add package paths as you create them in the packages/ directory
+# Neovim configuration (platform-agnostic base)
+# Platform-specific paths are defined in profile files
+[nvim]
+depends = []
 
-[files]
-# Example package mappings (commented out until packages are created):
-# packages/git/.gitconfig = "~/.gitconfig"
-
-# Neovim - platform-specific paths (commented out until package is created):
-# [files.packages/nvim]
-# type = "symbolic"
-#
-# [linux.files.packages/nvim]
-# target = "~/.config/nvim"
-#
-# [macos.files.packages/nvim]
-# target = "~/.config/nvim"
-#
-# [windows.files.packages/nvim]
-# target = "~/AppData/Local/nvim"
+[nvim.files]
+"packages/nvim" = "~/.config/nvim"

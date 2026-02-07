@@ -12,8 +12,15 @@ Dotter is a dotfile manager and templater. It creates symbolic links from the re
 
 ```
 .dotter/
-|-- global.toml          # Main dotter configuration file
-`-- CLAUDE.md            # This file - implementation guidance
+├── global.toml          # Base package definitions
+├── default/             # 默认的local.toml文件
+|     ├── windows.toml   # 默认的windows local 文件
+|     ├── unix.toml      # 默认的unix local 文件
+|     \── container.toml # 默认的container local 文件
+├── windows.toml         # Windows-specific configuration 
+├── unix.toml            # Unix-specific configuration
+├── local.toml           # User-specific, dotter 默认读取的配置文件, 新环境上，第一次通过boostrap脚本从default按照对应平台复制过来，如果需要自定义，可以修改这个文件
+└── CLAUDE.md            # This file - implementation guidance
 ```
 
 ## Configuration File: global.toml
@@ -24,22 +31,91 @@ The `global.toml` file defines:
 3. **Profiles**: Platform-specific configurations (linux, macos, windows)
 4. **Files**: Mappings between source files and deployment targets
 
-## Profile System
+## Platform-Specific Configuration with Includes
 
-### Platform Profiles
+Dotter supports platform-specific configuration through an include system where local.toml can include platform-specific configuration files.
 
-The repository supports three platform profiles:
-- `[linux]` - Linux systems (uses `~/.config` for configuration)
-- `[macos]` - macOS systems (uses `~/.config` for configuration)
-- `[windows]` - Windows systems (uses `~/AppData/Local` for configuration)
+### Configuration Structure
+```
+.dotter/
+├── global.toml          # Base package definitions (loaded by dotter automatically)
+├── windows.toml         # Windows-specific package overrides
+├── unix.toml            # Unix-specific package overrides
+└── local.toml           # User config: includes platform file + defines packages
+└── local.toml.example   # Template
+```
 
-### Profile Selection
+### Configuration Hierarchy
 
-Dotter automatically detects the platform, but you can override it:
+```
+global.toml (loaded automatically by dotter)
+  ↓ merged with
+local.toml (defines packages, includes platform file)
+  ↓ includes
+windows.toml or unix.toml (platform-specific overrides)
+```
+
+**Important Notes:**
+- `global.toml` is always loaded automatically by dotter
+- `local.toml` must define the `packages` key
+- Included files (windows.toml, unix.toml) should NOT define `packages` - they only patch package configurations
+- Included files override settings from global.toml
+- local.toml settings override everything
+
+### Using Platform-Specific Configuration
+
+1. Copy one of file in `default/` to local.toml:
 ```bash
-dotter deploy -l linux    # Force Linux profile
-dotter deploy -l macos    # Force macOS profile
-dotter deploy -l windows  # Force Windows profile
+cp .dotter/default/windwos.toml .dotter/local.toml
+```
+
+2. Edit local.toml and uncomment the appropriate include:
+```toml
+# For Windows:
+includes = [".dotter/windows.toml"]
+
+# For Linux/macOS:
+includes = [".dotter/unix.toml"]
+
+packages = ["git", "nvim"]
+```
+
+3. Deploy:
+```bash
+just stow
+# or directly:
+dotter deploy
+```
+
+### How Includes Work
+
+When you run `dotter deploy`, dotter:
+1. Automatically loads `global.toml` (defines all packages)
+2. Loads `local.toml` (defines which packages to use)
+3. Merges in each included file from local.toml in order
+4. Included files can override package settings from global.toml
+5. Deploys the merged configuration
+
+**Configuration Flow:**
+
+```
+global.toml (always loaded):
+  [nvim]
+  depends = []
+
+  [nvim.files]
+  "packages/nvim" = "~/.config/nvim"  # Default
+
+local.toml:
+  includes = [".dotter/windows.toml"]  # On Windows
+  packages = ["git", "nvim"]
+
+windows.toml (included and merged):
+  [nvim.files]
+  "packages/nvim" = "~/AppData/Local/nvim"  # Overrides global
+
+Result on Windows: packages/nvim → ~/AppData/Local/nvim
+Result on Unix (with unix.toml): packages/nvim → ~/.config/nvim
 ```
 
 ## File Mappings
@@ -48,45 +124,117 @@ dotter deploy -l windows  # Force Windows profile
 
 For platform-agnostic files:
 ```toml
-[files]
-packages/git/.gitconfig = "~/.gitconfig"
+[git]
+depends = []
+
+[git.files]
+"packages/git/.gitconfig" = "~/.gitconfig"
+"packages/git/.gitignore_global" = "~/.gitignore_global"
 ```
 
-This creates a symbolic link from `packages/git/.gitconfig` to `~/.gitconfig`.
+This creates symbolic links from the package files to their target locations.
 
 ### Platform-Specific Mappings
 
-For files that need different paths per platform:
+For files that need different paths per platform, use platform files to override the global configuration:
 
+**In global.toml** (platform-agnostic default, auto-loaded):
 ```toml
-# First declare the file
-[files.packages/nvim]
-type = "symbolic"
+[nvim]
+depends = []
 
-# Then define platform-specific targets
-[linux.files.packages/nvim]
-target = "~/.config/nvim"
-
-[macos.files.packages/nvim]
-target = "~/.config/nvim"
-
-[windows.files.packages/nvim]
-target = "~/AppData/Local/nvim"
+[nvim.files]
+"packages/nvim" = "~/.config/nvim"  # Default Unix path
 ```
 
-## Current Package Mappings
+**In unix.toml** (included from local.toml):
+```toml
+# Override settings for Unix platforms
+# Note: Do NOT define 'packages' here
 
-### Git Configuration
-- **Source**: `packages/git/.gitconfig`
-- **Target**: `~/.gitconfig` (all platforms)
-- **Type**: Symbolic link
+[nvim.files]
+"packages/nvim" = "~/.config/nvim"
+```
 
-### Neovim Configuration
-- **Source**: `packages/nvim/`
-- **Targets**:
-  - Linux/macOS: `~/.config/nvim`
-  - Windows: `~/AppData/Local/nvim`
-- **Type**: Symbolic link
+**In windows.toml** (included from local.toml):
+```toml
+# Override settings for Windows
+# Note: Do NOT define 'packages' here
+
+[nvim.files]
+"packages/nvim" = "~/AppData/Local/nvim"
+```
+### Key Concepts
+
+**Includes-Based Approach:**
+- global.toml defines all packages with default settings (auto-loaded)
+- local.toml specifies which packages to use and which platform file to include
+- Platform files (windows.toml, unix.toml) patch package settings for each platform
+- Single package (`nvim`) works on all platforms
+- Platform-specific configuration is cleanly separated
+
+**Why Use Includes:**
+- Clean separation of platform-specific logic
+- global.toml stays platform-agnostic
+- Platform files only define overrides, not full package definitions
+- Follows dotter's include pattern
+- No duplicate package definitions in global.toml
+- Easy to add new platforms (WSL, BSD, etc.)
+
+**File Deployment:**
+- Dotter recursively deploys files from directories by default
+- Individual files within `packages/nvim/` are symlinked to their targets
+- The end result is functionally equivalent to a directory symlink
+
+### Setup Steps
+
+1. Copy and edit local.toml:
+   ```bash
+   cp .dotter/default/windows.toml .dotter/local.toml
+   ```
+
+2. Edit local.toml to adjust packages if need:
+   ```toml
+   packages = ["git", "nvim"]
+   ```
+
+3. Preview deployment:
+   ```bash
+   just dry
+   # or directly:
+   dotter deploy --dry-run
+   ```
+
+4. Verify platform-specific behavior:
+   - **Windows**: Should show `packages/nvim/init.lua -> ~/AppData/Local/nvim/init.lua`
+   - **Linux/macOS**: Should show `packages/nvim/init.lua -> ~/.config/nvim/init.lua`
+
+5. Deploy dotfiles:
+   ```bash
+   just stow
+   # or directly:
+   dotter deploy
+   ```
+
+### Verification
+
+Check that configuration files were deployed:
+
+**On Windows (PowerShell):**
+```powershell
+Get-Item ~/AppData/Local/nvim/init.lua
+```
+
+**On Linux/macOS:**
+```bash
+ls -la ~/.config/nvim/init.lua
+```
+
+Test Neovim configuration:
+```bash
+nvim --version
+nvim -c "echo stdpath('config')" -c "quit"
+```
 
 ## Adding New Packages
 
@@ -110,26 +258,27 @@ packages/new-package/
 #### For Platform-Agnostic Files:
 
 ```toml
-[files]
-packages/new-package/.somerc = "~/.somerc"
+[new-package]
+depends = []
+
+[new-package.files]
+"packages/new-package/.somerc" = "~/.somerc"
 ```
 
 #### For Platform-Specific Files:
 
 ```toml
-# Declare the file
-[files.packages/new-package]
-type = "symbolic"
+# Declare the package
+[new-package]
+depends = []
 
-# Define platform-specific targets
-[linux.files.packages/new-package]
-target = "~/.config/new-package"
+# Define default file mapping
+[new-package.files]
+"packages/new-package" = { type = "symbolic", target = "~/.config/new-package" }
 
-[macos.files.packages/new-package]
-target = "~/.config/new-package"
-
-[windows.files.packages/new-package]
-target = "~/AppData/Local/new-package"
+# Override for Windows with different path
+[windows.new-package.files]
+"packages/new-package" = { type = "symbolic", target = "~/AppData/Local/new-package" }
 ```
 
 ### Step 4: Test Deployment
@@ -150,46 +299,30 @@ dotter deploy
 
 ### Symbolic Links (default)
 ```toml
-[files.packages/example]
-type = "symbolic"
-target = "~/.config/example"
+[example]
+depends = []
+
+[example.files]
+"packages/example/config" = "~/.config/example/config"
 ```
 
-Creates a symlink. Changes to deployed files are reflected in the repository.
+Creates a symlink by default. Changes to deployed files are reflected in the repository.
+
+### Explicit Symbolic Links
+```toml
+[example.files]
+"packages/example" = { type = "symbolic", target = "~/.config/example" }
+```
+
+Explicitly specify symbolic link type when needed (e.g., for directories).
 
 ### Template Files
 ```toml
-[files.packages/example/config.tmpl]
-type = "template"
-target = "~/.config/example/config"
+[example.files]
+"packages/example/config.tmpl" = { type = "template", target = "~/.config/example/config" }
 ```
 
 Processes the file through dotter's template engine. Useful for platform-specific content.
-
-## Common Operations
-
-### Deploy Dotfiles
-```bash
-just stow              # via justfile
-dotter deploy          # directly
-```
-
-### Dry Run (Preview Changes)
-```bash
-just dry               # via justfile
-dotter deploy --dry-run # directly
-```
-
-### Undeploy Dotfiles
-```bash
-just uninstall         # via justfile
-dotter undeploy --verbose # directly
-```
-
-### Check Configuration
-```bash
-dotter deploy --dry-run --verbose
-```
 
 ## Template Variables
 
@@ -227,12 +360,3 @@ git_email = {{ email }}
 - Verify helper variables are defined in `[helpers]`
 - Check template syntax: `{{ variable_name }}`
 - Use `--verbose` flag for detailed error messages
-
-## Integration with Justfile
-
-The repository uses `just` to orchestrate dotter:
-- `just dry` - Preview changes
-- `just stow` - Deploy dotfiles
-- `just uninstall` - Remove deployed dotfiles
-
-See the justfile for implementation details.

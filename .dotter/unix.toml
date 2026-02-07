@@ -1,0 +1,5 @@
+# Unix (Linux/macOS) configuration
+# This file is included from local.toml
+
+[nvim.files]
+"packages/nvim" = "~/.config/nvim"
