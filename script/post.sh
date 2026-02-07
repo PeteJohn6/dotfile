@@ -10,10 +10,21 @@ if [[ ! -d "$POST_DIR" ]]; then
     exit 0
 fi
 
+errors=0
 for script in "$POST_DIR"/*.sh; do
     [[ -f "$script" ]] || continue
-    echo "[post] Running $(basename "$script")..."
-    bash "$script"
+    name="$(basename "$script")"
+    echo "[post] Running $name..."
+    if bash "$script"; then
+        :
+    else
+        echo "[post] ERROR: $name failed (exit code $?)"
+        errors=$((errors + 1))
+    fi
 done
+
+if [[ $errors -gt 0 ]]; then
+    echo "[post] WARNING: $errors script(s) had errors"
+fi
 
 echo "[post] All post-install scripts completed"
