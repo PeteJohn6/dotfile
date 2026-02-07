@@ -1,0 +1,149 @@
+# Git attributes file
+# Managed by dotfiles repository
+# Controls line ending normalization and file handling across platforms
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+### Source Code ###
+
+# Shell scripts (force LF)
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.fish text eol=lf
+
+# PowerShell scripts (force CRLF for Windows compatibility)
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+
+# Batch scripts (force CRLF)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Common text files (force LF)
+*.txt text eol=lf
+*.md text eol=lf
+*.markdown text eol=lf
+*.rst text eol=lf
+
+# Configuration files (force LF)
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.ini text eol=lf
+*.conf text eol=lf
+*.config text eol=lf
+.editorconfig text eol=lf
+.gitconfig text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Programming languages (force LF)
+*.c text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.hpp text eol=lf
+*.cs text eol=lf
+*.java text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.py text eol=lf
+*.rb text eol=lf
+*.go text eol=lf
+*.rs text eol=lf
+*.php text eol=lf
+*.lua text eol=lf
+*.vim text eol=lf
+*.el text eol=lf
+
+# Web files (force LF)
+*.html text eol=lf
+*.htm text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.sass text eol=lf
+*.less text eol=lf
+*.svg text eol=lf
+
+# Build files (force LF)
+Makefile text eol=lf
+makefile text eol=lf
+*.mk text eol=lf
+Dockerfile text eol=lf
+Justfile text eol=lf
+justfile text eol=lf
+
+### Binary Files ###
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.bmp binary
+*.tiff binary
+
+# Fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+
+# Archives
+*.zip binary
+*.tar binary
+*.gz binary
+*.bz2 binary
+*.7z binary
+*.rar binary
+
+# Compiled binaries
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.a binary
+*.lib binary
+*.o binary
+*.obj binary
+
+# Documents
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+
+# Multimedia
+*.mp3 binary
+*.mp4 binary
+*.avi binary
+*.mov binary
+*.wmv binary
+*.flv binary
+*.wav binary
+*.flac binary
+
+### Diff Attributes ###
+
+# Don't diff generated files
+*.lock -diff
+package-lock.json -diff
+yarn.lock -diff
+Cargo.lock -diff
+Gemfile.lock -diff
+
+# Use custom diff drivers for specific files
+*.md diff=markdown
+*.json diff=json

@@ -1,0 +1,69 @@
+# Git configuration file
+# Managed by dotfiles repository
+
+[user]
+	# TODO: Set your identity
+	name = night
+	email = nightravem@gmail.com
+
+[core]
+	# Use global gitignore
+	excludesfile = ~/.gitconfig/.gitignore_global
+	# Use gitattributes for line endings
+	attributesfile = ~/.gitconfig/.gitattributes
+	# Improve diff display
+	pager = delta --color-only
+	# Enable autocrlf on Windows, input on Unix
+	autocrlf = input
+
+[delta]
+    features = decorations
+    navigate = true
+    side-by-side = true
+    line-numbers = true
+    # could be "syntax-theme = Dracula Extended" if you prefer that
+    syntax-theme = Monokai Extended
+    # light = true  # if you prefer a light theme
+
+[init]
+	# Use 'master' as default branch name
+	defaultBranch = master
+
+[pull]
+	# Rebase by default to maintain clean history
+	rebase = true
+
+[push]
+	# Push current branch to branch of same name
+	default = simple
+
+[fetch]
+	# Remove deleted remote branches
+	prune = true
+
+[rebase]
+	# Automatically stash/unstash when rebasing
+	autoStash = true
+
+[merge]
+	# Show common ancestor in conflict markers
+	conflictStyle = diff3
+
+[diff]
+	# Use better algorithm for diffs
+	algorithm = histogram
+	# Detect renames and copies
+	renames = copies
+
+[color]
+	# Enable colors in output
+	ui = auto
+
+[alias]
+	# Status shortcuts
+	st = status
+	s = status -sb
+
+[help]
+	# Autocorrect typos after 1 second
+	autocorrect = 10
