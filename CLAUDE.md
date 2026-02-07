@@ -28,22 +28,26 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 
 ### Package Lists Format
 
-Package lists are stored in `lists/<platform>.list`:
-- `lists/linux.list` - Packages for apt/dnf/pacman
-- `lists/macos.list` - Packages for Homebrew
-- `lists/windows.list` - Packages for winget/chocolatey/scoop
+Desktop environments use `packages/packages.list`, container environments use `packages/container.list`.
 
-Format:
+**`packages/packages.list`** — Format: `package [@platform] [| manager:name ...]`
 - One package per line
+- `@unix` = Linux + macOS only
+- `@windows` = Windows only
+- No tag = all platforms
+- `| manager:name ...` = optional per-manager name overrides (e.g. `fd | apt:fd-find dnf:fd-find`)
 - Comments start with `#`
 - Empty lines are ignored
 - Whitespace is trimmed
 
+**`packages/container.list`** — Minimal package list for containers
+- One package per line (no platform tags)
+- `install-unix.sh` auto-selects this file when a container environment is detected
+
 ### Workflow
 
 1. **Bootstrap**
-    - Linux: `bootstrap/bootstrap-linux.sh`
-    - macOS: `bootstrap/bootstrap-macos.sh`
+    - Linux/macOS: `bootstrap/bootstrap.sh` (auto-detects platform at runtime)
     - Windows: `bootstrap/bootstrap.ps1`
 
     a. Sets up environment variables if needed
@@ -51,14 +55,15 @@ Format:
     c. Uses the package manager to install: `just` (task runner) and `dotter` (dotfiles manager)
 
 2. `just` runs the following tasks in order:
-    1. **Install** (`script/install/*.{sh,ps1}`)
-        a. Parses platform-specific package lists from `lists/<platform>.list`
-        b. Installs tools via package managers (apt/dnf/pacman/brew/winget/choco)
+    1. **Install** (`script/install-unix.sh` | `script/install.ps1`)
+        a. Detects environment (container vs desktop)
+        b. Parses `packages/packages.list` (desktop) or `packages/container.list` (container)
+        c. Installs tools via package managers (apt/dnf/pacman/brew/winget/choco)
 
     2. **Stow** (via `dotter`)
 
-    3. **Post** (`script/post/post.{sh,ps1}`)
-        - Runs all `*.sh` (Unix) or `*.ps1` (Windows) scripts in `script/post/`
+    3. **Post** (`script/post.sh` | `script/post.ps1`)
+        - Discovers and runs per-tool scripts from `packages/post/`
         - Executes after dotfiles are linked (e.g., installing Neovim plugins)
 
 ### Design Principles
@@ -73,14 +78,19 @@ Format:
 |-- justfile                 # install/stow/post orchestration
 |-- .dotter/                 # dotter profiles
 |-- bootstrap/
-|   |-- bootstrap-macos.sh   # macOS dependency bootstrap
-|   |-- bootstrap-linux.sh   # Linux dependency bootstrap
-|   `-- bootstrap.ps1        # Windows dependency bootstrap
-|-- lists/                   # Platform-specific package lists (*.list files)
+|   |-- bootstrap.sh          # Linux/macOS dependency bootstrap
+|   `-- bootstrap.ps1         # Windows dependency bootstrap
 |-- script/
-|   |-- install/             # platform-specific install scripts
-|   `-- post/                # post scripts to run after stowing
-|-- packages/                # package's configurations
+|   |-- install-unix.sh      # Linux/macOS install script
+|   |-- install.ps1          # Windows install script
+|   |-- post.sh              # Unix post orchestrator
+|   `-- post.ps1             # Windows post orchestrator
+|-- packages/
+|   |-- packages.list         # desktop package list (supports @platform tags)
+|   |-- container.list        # minimal container package list
+|   |-- post/                 # per-tool post-install scripts
+|   |-- git/                  # git configuration
+|   `-- nvim/                 # neovim configuration
 |-- README.md                # overview and usage for users
 ```
 
@@ -98,15 +108,13 @@ Install scripts read package lists and install software using platform-specific 
 
 **Invocation**: Called by `just install`
 
-see `script/install/CLAUDE.md` for detailed install notes.
-
 ### Post Scripts
 
-Post scripts run after dotfiles are deployed to perform additional setup (e.g., installing plugins, compiling tools).
+Post orchestrators discover and run per-tool scripts from `packages/post/`.
 
 **Invocation**: Called by `just post`
 
-see `script/post/CLAUDE.md` for detailed post-installation notes.
+see `script/CLAUDE.md` for detailed install and post-installation notes.
 
 ### README
 

@@ -1,0 +1,10 @@
+# container.list
+# Minimal package list for container environments
+# Format: one package per line (no platform tags needed)
+
+git
+neovim
+ripgrep
+fd | apt:fd-find dnf:fd-find
+fzf
+jq

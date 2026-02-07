@@ -1,0 +1,60 @@
+# packages.list
+# Format: package [@platform] [| manager:name ...]
+# Supported platforms: unix (Linux+macOS), windows
+# No tag = all platforms
+# Aliases: | separates optional per-manager name overrides (e.g. fd | apt:fd-find)
+
+# -- cross-platform --
+git
+neovim
+ripgrep
+bat
+fd | apt:fd-find dnf:fd-find
+fzf
+jq
+yq
+tldr
+delta | apt:git-delta dnf:git-delta pacman:git-delta brew:git-delta
+zoxide
+eza
+lsd
+starship
+
+# -- terminal / GUI --
+alacritty @windows
+wezterm @windows
+zed @windows
+neovide @windows
+nushell @windows
+tmux @windows
+zellij @windows
+
+# -- language toolchains --
+nvm @windows
+uv @windows
+
+# -- crypto --
+openssl @windows
+
+## optional (uncomment to enable)
+# tree
+# yazi
+# helix
+# devpod
+# terraform
+# podman
+# podman-desktop
+# kubectl
+# pandoc
+# graphviz
+# mitmproxy
+# azure-cli
+# github-cli
+# ffmpeg
+# gpac
+# gstreamer
+# llvm
+# cmake
+# ninja
+# meson
+# zig
