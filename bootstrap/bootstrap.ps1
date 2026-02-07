@@ -101,6 +101,29 @@ else {
     }
 }
 
+# Setup local.toml from default template
+Write-Host ""
+$defaultFile = ".dotter\default\windows.toml"
+
+if (Test-Path ".dotter\local.toml") {
+    Log "local.toml already exists, showing diff:"
+    $existing = Get-Content ".dotter\local.toml" -Raw
+    $default = Get-Content $defaultFile -Raw
+    if ($existing -ne $default) {
+        Write-Host "--- Default template ---"
+        Get-Content $defaultFile
+        Write-Host ""
+        Write-Host "--- Current local.toml ---"
+        Get-Content ".dotter\local.toml"
+    } else {
+        Log "Files are identical"
+    }
+}
+else {
+    Copy-Item $defaultFile ".dotter\local.toml"
+    Log "Copied $defaultFile -> .dotter\local.toml"
+}
+
 Write-Host ""
 Log "=========================================="
 Log "Bootstrap complete!"

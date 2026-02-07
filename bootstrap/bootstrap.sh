@@ -283,6 +283,34 @@ bootstrap_macos() {
 }
 
 # ============================================================================
+# Local Configuration Setup
+# ============================================================================
+
+# Setup local.toml from default template
+setup_local_toml() {
+    local default_file
+
+    if is_container; then
+        default_file=".dotter/default/container.toml"
+        echo "[bootstrap] Environment: Container detected"
+    else
+        default_file=".dotter/default/unix.toml"
+    fi
+
+    if [ -f ".dotter/local.toml" ]; then
+        echo "[bootstrap] local.toml already exists, showing diff:"
+        if command -v diff &> /dev/null; then
+            diff -u "$default_file" ".dotter/local.toml" || true
+        else
+            echo "[bootstrap] (diff not available, skipping comparison)"
+        fi
+    else
+        cp "$default_file" ".dotter/local.toml"
+        echo "[bootstrap] Copied $default_file -> .dotter/local.toml"
+    fi
+}
+
+# ============================================================================
 # Main Entry Point
 # ============================================================================
 
@@ -312,6 +340,10 @@ main() {
             exit 1
             ;;
     esac
+
+    # Setup local.toml from default template
+    echo ""
+    setup_local_toml
 
     echo ""
     echo "[bootstrap] =========================================="
