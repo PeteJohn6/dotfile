@@ -11,25 +11,25 @@ default:
 # Install packages via platform-specific package managers
 install:
     @echo "==> Installing packages for {{ os_type }}..."
-    @{{ if os_type == "linux" { "bash script/install/install-linux.sh" } else if os_type == "macos" { "bash script/install/install-macos.sh" } else if os_type == "windows" { "pwsh script/install/install.ps1" } else { "echo 'Unsupported platform: " + os_type + "'" } }}
+    @{{ if os_type == "windows" { "pwsh script/install.ps1" } else { "bash script/install-unix.sh" } }}
     @echo "==> Package installation complete"
 
 # Dry run - preview dotfile deployment without making changes
 dry:
     @echo "==> Running dotter dry-run (preview mode)..."
-    @{{ if os_type == "windows" { ".\\bin\\dotter.exe deploy --dry-run" } else { "./bin/dotter deploy --dry-run" } }}
+    @{{ if os_type == "windows" { "dotter deploy --dry-run" } else { "./bin/dotter deploy --dry-run" } }}
     @echo "==> Dry-run complete. Run 'just stow' to apply changes."
 
 # Stow - deploy dotfiles via dotter (create symbolic links)
 stow:
     @echo "==> Deploying dotfiles via dotter..."
-    @{{ if os_type == "windows" { ".\\bin\\dotter.exe deploy" } else { "./bin/dotter deploy" } }}
+    @{{ if os_type == "windows" { "dotter.exe deploy" } else { "./bin/dotter deploy" } }}
     @echo "==> Dotfiles deployed successfully"
 
 # Post-installation - run post-deployment scripts
 post:
     @echo "==> Running post-installation scripts for {{ os_type }}..."
-    @{{ if os_type == "windows" { "pwsh script/post/post.ps1" } else { "bash script/post/post.sh" } }}
+    @{{ if os_type == "windows" { "pwsh script/post.ps1" } else { "bash script/post.sh" } }}
     @echo "==> Post-installation complete"
 
 # Up - complete setup workflow (install -> stow -> post)

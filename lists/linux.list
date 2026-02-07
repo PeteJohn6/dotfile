@@ -1,7 +1,0 @@
-# Linux Package List
-# Packages to install via apt/dnf/pacman
-
-# Essential development tools
-git
-neovim
-ripgrep
