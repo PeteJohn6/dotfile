@@ -3,6 +3,9 @@
 
 [helpers]
 
+[settings]
+default_target_type = "symbolic"
+
 # Git package - platform-agnostic configuration
 [git]
 depends = []
