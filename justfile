@@ -17,6 +17,19 @@ install:
     @{{ if os_type == "windows" { "pwsh script/install.ps1" } else { "bash script/install-unix.sh" } }}
     @echo "==> Package installation complete"
 
+# Install packages with strict pre-install checks
+[unix]
+install-force:
+    @echo "==> Installing packages (strict mode) for {{ os_type }}..."
+    @bash script/install-unix.sh --strict
+    @echo "==> Package installation complete"
+
+[windows]
+install-force:
+    @echo "==> Installing packages for {{ os_type }}..."
+    @pwsh script/install.ps1
+    @echo "==> Package installation complete"
+
 # Dry run - preview dotfile deployment without making changes
 [unix]
 dry:
@@ -63,7 +76,7 @@ up: install stow post
     @echo "=========================================="
 
 # Up force - complete setup workflow, overwriting conflicts
-up-force: install stow-force post
+up-force: install-force stow-force post
     @echo ""
     @echo "=========================================="
     @echo "  Setup Complete!"

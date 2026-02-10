@@ -3,6 +3,21 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+STRICT=0
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --strict)
+            STRICT=1
+            shift
+            ;;
+        *)
+            echo "[install] ERROR: Unknown argument: $1"
+            echo "[install] Usage: bash script/install-unix.sh [--strict]"
+            exit 2
+            ;;
+    esac
+done
 
 # Container detection (mirrors bootstrap.sh)
 is_container() {
@@ -121,22 +136,29 @@ detect_pkg_manager
 
 PKG_ALIASES=$(load_aliases)
 
-# Refresh package index
-case "$PKG_MANAGER" in
-    apt)    echo "[install] Updating package index..."
-            export DEBIAN_FRONTEND=noninteractive
-            maybe_sudo apt-get update -qq ;;
-    dnf)    echo "[install] Updating package index..."
-            maybe_sudo dnf makecache -q ;;
-    pacman) echo "[install] Updating package index..."
-            maybe_sudo pacman -Sy --noconfirm ;;
-esac
-
 # Collect packages into array (bash 3.2 compatible)
 packages=()
 while IFS= read -r pkg; do
     packages+=("$pkg")
 done < <(parse_packages)
+
+package_list=""
+for pkg in "${packages[@]}"; do
+    if [[ -z "$package_list" ]]; then
+        package_list="$pkg"
+    else
+        package_list="$package_list,$pkg"
+    fi
+done
+
+echo "[install] Running pre-install steps..."
+if ! bash "$SCRIPT_DIR/pre-install-unix.sh" \
+    --strict "$STRICT" \
+    --pkg-manager "$PKG_MANAGER" \
+    --package-list "$package_list"; then
+    echo "[install] ERROR: pre-install failed"
+    exit 1
+fi
 
 echo "[install] Installing ${#packages[@]} package(s)..."
 echo ""

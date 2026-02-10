@@ -40,6 +40,7 @@ just up          # install -> stow -> post
 **Step-by-step:**
 ```bash
 just install     # Install packages from lists
+just install-force  # Unix: install with strict pre-install checks
 just dry         # Preview dotfile deployment
 just stow        # Deploy dotfiles (create symlinks)
 just post        # Run post-installation scripts
@@ -74,7 +75,7 @@ just uninstall
 
 ```
 1. Bootstrap → Install just, dotter, package managers
-2. Install   → Install packages from packages/packages.list (or container.list in containers)
+2. Install   → Run pre-install (repo prep + index update), then install packages from packages/packages.list (or container.list in containers)
 3. Stow      → Deploy dotfiles via dotter (symbolic links)
 4. Post      → Run post-installation scripts
 ```
@@ -98,6 +99,7 @@ just uninstall
 │   └── bootstrap.ps1        # Windows bootstrap
 ├── script/
 │   ├── install-unix.sh      # Linux/macOS install script
+│   ├── pre-install-unix.sh  # Unix pre-install script (repo prep + index update)
 │   ├── install.ps1          # Windows install script
 │   ├── post.sh              # Unix post orchestrator
 │   └── post.ps1             # Windows post orchestrator
@@ -115,6 +117,11 @@ just uninstall
 1. **Idempotency**: All scripts can be run multiple times safely
 2. **Platform Detection**: Scripts auto-detect the platform
 3. **Error Handling**: Fail fast with clear error messages
+
+## Force Mode
+
+- `just install-force`: runs install with strict pre-install checks (Unix)
+- `just up-force`: runs `install-force -> stow-force -> post`
 
 ## Documentation
 
