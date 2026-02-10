@@ -124,6 +124,7 @@ PKG_ALIASES=$(load_aliases)
 # Refresh package index
 case "$PKG_MANAGER" in
     apt)    echo "[install] Updating package index..."
+            export DEBIAN_FRONTEND=noninteractive
             maybe_sudo apt-get update -qq ;;
     dnf)    echo "[install] Updating package index..."
             maybe_sudo dnf makecache -q ;;

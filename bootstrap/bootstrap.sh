@@ -165,7 +165,7 @@ bootstrap_linux() {
         case "$PKG_MANAGER" in
             apt)
                 maybe_sudo apt-get update -qq >/dev/null 2>&1
-                maybe_sudo apt-get install -y -qq curl
+                DEBIAN_FRONTEND=noninteractive maybe_sudo apt-get install -y -qq curl
                 ;;
             dnf)
                 maybe_sudo dnf install -y -q curl
@@ -185,7 +185,7 @@ bootstrap_linux() {
         case "$PKG_MANAGER" in
             apt)
                 maybe_sudo apt-get update -qq
-                maybe_sudo apt-get install -y -qq just
+                DEBIAN_FRONTEND=noninteractive maybe_sudo apt-get install -y -qq just
                 ;;
             dnf)
                 maybe_sudo dnf install -y -q just
