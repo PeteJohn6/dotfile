@@ -8,9 +8,9 @@
 
 [core]
 	# Use global gitignore
-	excludesfile = ~/.gitconfig/.gitignore_global
+	excludesfile = ~/.gitconfigdir/.gitignore_global
 	# Use gitattributes for line endings
-	attributesfile = ~/.gitconfig/.gitattributes
+	attributesfile = ~/.gitconfigdir/.gitattributes
 	# Improve diff display
 	pager = delta --color-only
 	# Enable autocrlf on Windows, input on Unix

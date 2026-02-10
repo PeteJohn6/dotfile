@@ -12,8 +12,8 @@ depends = []
 
 [git.files]
 "packages/git/.gitconfig" = "~/.gitconfig"
-"packages/git/.gitignore_global" = "~/.gitconfig/.gitignore_global"
-"packages/git/.gitattributes" = "~/.gitconfig/.gitattributes"
+"packages/git/.gitignore_global" = "~/.gitconfigdir/.gitignore_global"
+"packages/git/.gitattributes" = "~/.gitconfigdir/.gitattributes"
 
 
 # Neovim configuration (platform-agnostic base)
