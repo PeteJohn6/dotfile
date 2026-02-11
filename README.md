@@ -99,11 +99,11 @@ just uninstall
 │   └── bootstrap.ps1        # Windows bootstrap
 ├── script/
 │   ├── install-unix.sh      # Linux/macOS install script
-│   ├── pre-install-unix.sh  # Unix pre-install script (repo prep + index update)
 │   ├── install.ps1          # Windows install script
 │   ├── post.sh              # Unix post orchestrator
 │   └── post.ps1             # Windows post orchestrator
 └── packages/
+    ├── pre-install-unix.sh  # Unix pre-install rule library
     ├── packages.list        # Unified package list (with @platform tags)
     ├── container.list       # Minimal package list for containers
     ├── post/                # Per-tool post-install scripts

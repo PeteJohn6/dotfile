@@ -41,12 +41,15 @@ Bootstrap scripts prepare the system with minimal dependencies required to run t
 
 ### Linux/macOS (`bootstrap.sh`)
 
-1. **Platform Detection**: Detects Linux vs macOS via `uname -s`
-2. **Environment Detection**: Detects container vs standard system, root vs user
+1. **Unified Detection**: Uses `script/detect_platform.sh` to set:
+   - `PLATFORM` (`linux`/`macos`)
+   - `IS_CONTAINER` (`0`/`1`)
+   - `PKG_MANAGER` (`apt`/`dnf`/`pacman`/`brew`)
+2. **Environment Handling**: Uses root/container state to decide sudo usage
 3. **Bin Directory Setup**: Creates `bin/` and adds to `.gitignore`
 4. **Self-Sufficiency Check**: Installs curl/wget if needed (for dotter download)
 5. **Package Manager Setup**:
-   - Linux: Uses existing system package manager (apt/dnf/pacman)
+   - Linux: Uses detected package manager (`PKG_MANAGER`)
    - macOS: Installs Homebrew if not present
 6. **Install `just`**: Via package manager (system-wide)
 7. **Download `dotter`**: Latest release from GitHub to `bin/` (project-local)
@@ -63,9 +66,8 @@ Bootstrap scripts prepare the system with minimal dependencies required to run t
 Bootstrap automatically detects the execution environment and conditionally uses `sudo`:
 
 ### Container Environments
-- Detected via `/.dockerenv`, `container` env var, or `/proc/1/cgroup` indicators
-- If running as root or with writable system paths: No `sudo` used
-- Otherwise: Uses `sudo` if available
+- Detected via unified `detect_platform.sh` (`IS_CONTAINER=1`)
+- No `sudo` used
 
 ### Standard Linux/macOS
 - Uses `sudo` for system installations unless running as root
@@ -75,7 +77,7 @@ Bootstrap automatically detects the execution environment and conditionally uses
 
 This allows bootstrap to work seamlessly in:
 - Docker/Podman containers running as root
-- Docker containers with writable system paths
+- Docker/Podman containers running as non-root
 - Standard Linux systems requiring privilege elevation
 - macOS systems (Homebrew typically doesn't need sudo)
 
@@ -86,7 +88,6 @@ This allows bootstrap to work seamlessly in:
 - `bootstrap/bootstrap.ps1` - Windows bootstrap
 
 ### Helper Functions (`bootstrap.sh`)
-- `is_container()` - Detects container environment
 - `needs_sudo()` - Determines if sudo is required
 - `maybe_sudo()` - Conditionally wraps commands with sudo
 - `setup_bin_directory()` - Creates bin/ and updates .gitignore

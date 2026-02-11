@@ -30,8 +30,9 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 
 Desktop environments use `packages/packages.list`, container environments use `packages/container.list`.
 
-**`packages/packages.list`** — Format: `package [@platform] [| manager:name ...]`
+**`packages/packages.list`** — Format: `package[(cli_name)] [@platform] [| manager:name ...]`
 - One package per line
+- `(cli_name)` is optional; defaults to package name (e.g. `neovim(nvim)`, `ripgrep(rg)`)
 - `@unix` = Linux + macOS only
 - `@windows` = Windows only
 - No tag = all platforms
@@ -41,7 +42,8 @@ Desktop environments use `packages/packages.list`, container environments use `p
 - Whitespace is trimmed
 
 **`packages/container.list`** — Minimal package list for containers
-- One package per line (no platform tags)
+- One package per line, supports `package[(cli_name)]` and optional aliases
+- No platform tags needed
 - `install-unix.sh` auto-selects this file when a container environment is detected
 
 ### Workflow
@@ -56,9 +58,11 @@ Desktop environments use `packages/packages.list`, container environments use `p
 
 2. `just` runs the following tasks in order:
     1. **Install** (`script/install-unix.sh` | `script/install.ps1`)
-        a. Detects environment (container vs desktop)
+        a. Detects runtime context (`PLATFORM` / `IS_CONTAINER` / `PKG_MANAGER`)
         b. Parses `packages/packages.list` (desktop) or `packages/container.list` (container)
-        c. Installs tools via package managers (apt/dnf/pacman/brew/winget/choco)
+        c. Runs package-driven pre-install rules (e.g. binary fallback installs using `INSTALL_BIN_DIR`: host default `~/.local/bin`, container default `/usr/local/bin`, and prepends it to `PATH` for current install run)
+        d. Skips packages already satisfied by CLI availability
+        e. Installs remaining tools via package managers (apt/dnf/pacman/brew/winget/choco)
 
     2. **Stow** (via `dotter`)
 

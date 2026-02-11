@@ -11,24 +11,26 @@ Install scripts read the unified package list and install software using platfor
 ### Available Scripts
 
 - `install-unix.sh` - Linux/macOS installation script (apt/dnf/pacman/brew)
-- `pre-install-unix.sh` - Unix pre-install script (repo setup + package index refresh)
 - `install.ps1` - Windows installation script (winget/scoop/chocolatey)
 
 ### How It Works
 
-1. Detect environment: container vs desktop Unix via `is_container()` which checks:
-   - `/.dockerenv` file existence
-   - `$container` environment variable (set by systemd-nspawn, podman, etc.)
-   - `/proc/1/cgroup` containing `docker`, `lxc`, `podman`, or `containerd`
-2. Select package list: `packages/container.list` for containers, `packages/packages.list` otherwise
+1. Detect runtime via `script/detect_platform.sh`, which outputs:
+   - `PLATFORM` (`linux` or `macos`)
+   - `IS_CONTAINER` (`0` or `1`)
+   - `PKG_MANAGER` (`apt`, `dnf`, `pacman`, or `brew`)
+2. Select package list:
+   - `IS_CONTAINER=1` -> `packages/container.list`
+   - `IS_CONTAINER=0` -> `packages/packages.list`
 3. Parse the list file (skip comments, handle whitespace, filter by `@platform` tag)
-4. Run `pre-install-unix.sh` with explicit arguments:
-   - `--strict <0|1>`
-   - `--pkg-manager <apt|dnf|pacman|brew>`
-   - `--package-list <pkg1,pkg2,...>`
-5. `pre-install-unix.sh` applies per-package preparation rules (e.g. add repos) and refreshes package indexes
-6. Install packages using the platform's package manager
-7. Log progress and handle errors gracefully
+   - Supports `package[(cli_name)]`
+   - `cli_name` defaults to package name when omitted
+4. Source `packages/pre-install-unix.sh` as a rule library
+5. Run package-driven pre-install rules using the rule-map selector
+6. Refresh package indexes after pre-install rules
+7. For each package, check if CLI is already available; if yes, skip package-manager install
+8. Install only unresolved packages via the platform's package manager
+9. Log progress with `succeeded/skipped/failed` summary
 
 ### Invocation
 
@@ -41,18 +43,27 @@ bash script/install-unix.sh --strict
 pwsh script/install.ps1
 ```
 
-### Pre-Install Rule Maintenance
+### Pre-Install Behavior
 
-Rules in `pre-install-unix.sh` must follow these constraints:
+`packages/pre-install-unix.sh` uses a package rule dispatcher:
+- `install-unix.sh` iterates parsed packages and calls `run_pre_install_for_package`
+- `run_pre_install_for_package` resolves handlers via `PREINSTALL_RULE_MAP` (`pkg:handler`)
+- Current built-in rule: `neovim` -> rule function triggers when `PKG_MANAGER` is `apt`; installs Neovim tarball into `~/.local/opt/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: host `~/.local/bin/nvim`, container `/usr/local/bin/nvim`) (idempotent)
+- If rule conditions are not met, pre-install returns without installing and `install-unix.sh` falls back to package-manager install
+- After rules run, package indexes are refreshed
+- Consistent log prefix format: `[pre-install:<manager>]`
 
-- Rules are package-driven: only run when that package exists in `--package-list`
-- Rules are idempotent: repeated runs must not create duplicate repo/config entries
-- Package matching must be exact (no substring matching)
-- Rule failures are handled only through `--strict` semantics:
-  - `--strict 0`: warn and continue
-  - `--strict 1`: fail immediately
-- Add new package rules inside `pre-install-unix.sh`; do not expand CLI with package-specific flags
-- Use consistent log prefix format: `[pre-install:<manager>]`
+`packages/pre-install-unix.sh` should not call `detect_platform.sh`; it relies on context provided by `install-unix.sh`.
+`install-unix.sh` provides `INSTALL_BIN_DIR` for binary link targets (default: host `~/.local/bin`, container `/usr/local/bin`) and prepends it to `PATH` for the current install process.
+
+### Strict vs Non-Strict
+
+- `install-unix.sh` default mode is non-strict (`--strict` omitted)
+  - Failed package installs are recorded, but script exits `0`
+  - Supports "manual fix then rerun install" workflow
+- `install-unix.sh --strict`
+  - Any failed package install causes final non-zero exit
+- `packages/pre-install-unix.sh` follows the same strict flag through `preinstall_handle_failure`
 
 ## Post Scripts
 

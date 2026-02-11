@@ -5,14 +5,40 @@
 - `packages.list` — Full package list for desktop Unix and Windows (supports `@platform` tags)
 - `container.list` — Minimal package list for container environments (no platform tags)
 
+### List Format
+
+Both list files support:
+
+- `package[(cli_name)] [@platform] [| manager:name ...]`
+- `cli_name` is optional and defaults to package name
+- `| manager:name ...` defines package-manager aliases (e.g. `fd | apt:fd-find dnf:fd-find`)
+
+Examples:
+
+- `neovim(nvim)`
+- `ripgrep(rg)`
+- `fd | apt:fd-find dnf:fd-find`
+
 ### Selection Logic
 
-`install-unix.sh` detects container environments and selects the appropriate list:
+`install-unix.sh` uses `script/detect_platform.sh` and its unified variables:
+- `PLATFORM` (`linux`/`macos`)
+- `IS_CONTAINER` (`0`/`1`)
+- `PKG_MANAGER` (`apt`/`dnf`/`pacman`/`brew`)
 
-- **Desktop** → `packages/packages.list` (filtered by `@platform` tags)
-- **Container** → `packages/container.list` (plain list, no tags needed)
+Then selects the package list:
+
+- **Host (`IS_CONTAINER=0`)** → `packages/packages.list` (filtered by `@platform` tags)
+- **Container (`IS_CONTAINER=1`)** → `packages/container.list` (plain list, no tags needed)
 
 `container.list` pairs with `.dotter/container.toml` — the list controls which packages are installed, while the dotter profile controls which dotfiles are deployed.
+
+### Pre-Install Rules
+
+Some packages trigger pre-install setup in `packages/pre-install-unix.sh` before installation.
+`install-unix.sh` selects and runs these rules through a package-to-handler map.
+Current rule:
+- `neovim` -> pre-install rule triggers when `PKG_MANAGER` is `apt`; installs Neovim tarball under `~/.local/opt/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: host `~/.local/bin/nvim`, container `/usr/local/bin/nvim`)
 
 ## Per-Tool Post-Install Scripts (`packages/post/`)
 
