@@ -4,35 +4,21 @@
 
 set -euo pipefail
 
+BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BOOTSTRAP_REPO_ROOT="$(dirname "$BOOTSTRAP_DIR")"
+# shellcheck source=script/detect_platform.sh
+source "$BOOTSTRAP_REPO_ROOT/script/detect_platform.sh"
+
 # ============================================================================
 # Shared Functions (Platform-Independent)
 # ============================================================================
-
-# Environment detection functions
-is_container() {
-    # Check for Docker
-    [ -f /.dockerenv ] && return 0
-
-    # Check for container environment variable
-    [ -n "${container:-}" ] && return 0
-
-    # Check cgroup for docker/lxc/podman/containerd
-    if [ -f /proc/1/cgroup ]; then
-        grep -qE 'docker|lxc|podman|containerd' /proc/1/cgroup 2>/dev/null && return 0
-    fi
-
-    return 1
-}
 
 needs_sudo() {
     # If running as root, don't need sudo
     [ "$(id -u)" -eq 0 ] && return 1
 
-    # If in container, check if we can write to target directory
-    if is_container; then
-        # Test write permission to /usr/local/bin
-        [ -w /usr/local/bin ] && return 1
-    fi
+    # Containers do not require sudo escalation
+    [ "$IS_CONTAINER" -eq 1 ] && return 1
 
     # Standard environment needs sudo
     return 0
@@ -61,10 +47,10 @@ setup_bin_directory() {
 
 # Download dotter binary
 download_dotter() {
-    local platform=$1
+    local target_platform=$1
     local arch=$2
 
-    echo "[bootstrap] Downloading dotter for ${platform}-${arch}..."
+    echo "[bootstrap] Downloading dotter for ${target_platform}-${arch}..."
 
     # Define download function based on available tool
     if command -v curl &> /dev/null; then
@@ -97,7 +83,7 @@ download_dotter() {
     echo "[bootstrap] Latest dotter version: v${DOTTER_VERSION}"
 
     # Download to bin/
-    case "$platform" in
+    case "$target_platform" in
         linux)
             DOTTER_URL="https://github.com/SuperCuber/dotter/releases/download/v${DOTTER_VERSION}/dotter-linux-${arch}-musl"
             ;;
@@ -105,7 +91,7 @@ download_dotter() {
             DOTTER_URL="https://github.com/SuperCuber/dotter/releases/download/v${DOTTER_VERSION}/dotter-macos-${arch}"
             ;;
         *)
-            echo "[bootstrap] ERROR: Unsupported platform: $platform"
+            echo "[bootstrap] ERROR: Unsupported platform: $target_platform"
             exit 1
             ;;
     esac
@@ -124,39 +110,6 @@ download_dotter() {
 # ============================================================================
 
 bootstrap_linux() {
-    echo "[bootstrap] Detected: Linux"
-
-    # Detect and report environment
-    if [ "$(id -u)" -eq 0 ]; then
-        echo "[bootstrap] Environment: Running as root"
-        echo "[bootstrap] Sudo not required"
-    elif is_container; then
-        if [ -w /usr/local/bin ]; then
-            echo "[bootstrap] Environment: Container (writable system paths)"
-            echo "[bootstrap] Sudo not required"
-        else
-            echo "[bootstrap] Environment: Container (restricted permissions)"
-            echo "[bootstrap] Sudo will be used for system installations"
-        fi
-    else
-        echo "[bootstrap] Environment: Standard Linux"
-        echo "[bootstrap] Sudo will be used for system installations"
-    fi
-
-    # Detect package manager
-    if command -v apt-get &> /dev/null; then
-        PKG_MANAGER="apt"
-    elif command -v dnf &> /dev/null; then
-        PKG_MANAGER="dnf"
-    elif command -v pacman &> /dev/null; then
-        PKG_MANAGER="pacman"
-    else
-        echo "[bootstrap] ERROR: No supported package manager found (apt/dnf/pacman)"
-        exit 1
-    fi
-
-    echo "[bootstrap] Package manager: $PKG_MANAGER"
-
     # Check and install required dependencies (curl/wget for dotter download)
     echo "[bootstrap] Checking required dependencies..."
 
@@ -216,16 +169,6 @@ bootstrap_linux() {
 # ============================================================================
 
 bootstrap_macos() {
-    echo "[bootstrap] Detected: macOS"
-
-    # Detect and report environment
-    if [ "$(id -u)" -eq 0 ]; then
-        echo "[bootstrap] Environment: Running as root"
-        echo "[bootstrap] Note: Homebrew should not be run as root"
-    else
-        echo "[bootstrap] Environment: Standard macOS"
-    fi
-
     # Check for curl (should always be present on macOS)
     if ! command -v curl &> /dev/null; then
         echo "[bootstrap] ERROR: curl not found. This is unexpected on macOS."
@@ -290,7 +233,7 @@ bootstrap_macos() {
 setup_local_toml() {
     local default_file
 
-    if is_container; then
+    if [ "$IS_CONTAINER" -eq 1 ]; then
         default_file=".dotter/default/container.toml"
         echo "[bootstrap] Environment: Container detected"
     else
@@ -327,16 +270,28 @@ main() {
     # Setup bin directory
     setup_bin_directory
 
+    if ! detect_platform; then
+        echo "[bootstrap] ERROR: Failed to detect platform"
+        exit 1
+    fi
+    echo "[bootstrap] Platform: $PLATFORM"
+    if [ "$IS_CONTAINER" -eq 1 ]; then
+        echo "[bootstrap] Environment: container"
+    else
+        echo "[bootstrap] Environment: host"
+    fi
+    echo "[bootstrap] Package manager: $PKG_MANAGER"
+
     # Platform dispatch
-    case "$(uname -s)" in
-        Linux)
+    case "$PLATFORM" in
+        linux)
             bootstrap_linux
             ;;
-        Darwin)
+        macos)
             bootstrap_macos
             ;;
         *)
-            echo "[bootstrap] ERROR: Unsupported platform: $(uname -s)"
+            echo "[bootstrap] ERROR: Unsupported platform: $PLATFORM"
             exit 1
             ;;
     esac
