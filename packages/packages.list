@@ -1,13 +1,14 @@
 # packages.list
-# Format: package [@platform] [| manager:name ...]
+# Format: package[(cli_name)] [@platform] [| manager:name ...]
 # Supported platforms: unix (Linux+macOS), windows
 # No tag = all platforms
+# cli_name is optional and defaults to package name (e.g. neovim(nvim), ripgrep(rg))
 # Aliases: | separates optional per-manager name overrides (e.g. fd | apt:fd-find)
 
 # -- cross-platform --
 git
-neovim
-ripgrep
+neovim(nvim)
+ripgrep(rg)
 bat
 fd | apt:fd-find dnf:fd-find
 fzf

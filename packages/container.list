@@ -1,10 +1,11 @@
 # container.list
 # Minimal package list for container environments
-# Format: one package per line (no platform tags needed)
+# Format: package[(cli_name)] [| manager:name ...]
+# No platform tags needed for container list
 
 git
-neovim
-ripgrep
+neovim(nvim)
+ripgrep(rg)
 fd | apt:fd-find dnf:fd-find
 fzf
 jq

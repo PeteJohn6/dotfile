@@ -19,42 +19,114 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Container detection (mirrors bootstrap.sh)
-is_container() {
-    [ -f /.dockerenv ] && return 0
-    [ -n "${container:-}" ] && return 0
-    if [ -f /proc/1/cgroup ]; then
-        grep -qE 'docker|lxc|podman|containerd' /proc/1/cgroup 2>/dev/null && return 0
-    fi
-    return 1
-}
+# shellcheck source=script/detect_platform.sh
+source "$SCRIPT_DIR/detect_platform.sh"
+
+if ! detect_platform; then
+    echo "[install] ERROR: Failed to detect platform"
+    exit 1
+fi
+
+echo "[install] Platform: $PLATFORM"
 
 # Select package list based on environment
-if is_container; then
+if [ "$IS_CONTAINER" -eq 1 ]; then
     LIST_FILE="$REPO_ROOT/packages/container.list"
     echo "[install] Environment: container"
 else
     LIST_FILE="$REPO_ROOT/packages/packages.list"
-    echo "[install] Environment: unix"
+    echo "[install] Environment: host"
 fi
+
+if [[ -z "${INSTALL_BIN_DIR:-}" ]]; then
+    if [ "$IS_CONTAINER" -eq 1 ]; then
+        INSTALL_BIN_DIR="/usr/local/bin"
+    else
+        INSTALL_BIN_DIR="$HOME/.local/bin"
+    fi
+fi
+
+case ":$PATH:" in
+    *":$INSTALL_BIN_DIR:"*) ;;
+    *) export PATH="$INSTALL_BIN_DIR:$PATH" ;;
+esac
+
+if [[ "$PKG_MANAGER" == "brew" ]] && ! command -v brew >/dev/null 2>&1; then
+    echo "[install] ERROR: Homebrew not found. Run bootstrap first."
+    exit 1
+fi
+
+echo "[install] Package manager: $PKG_MANAGER"
+echo "[install] Binary link dir: $INSTALL_BIN_DIR"
+
+trim() {
+    local s="$1"
+    s="${s#"${s%%[![:space:]]*}"}"
+    s="${s%"${s##*[![:space:]]}"}"
+    printf '%s' "$s"
+}
+
+PARSED_PKG=""
+PARSED_CLI=""
+PARSED_TAG=""
+
+parse_main_entry() {
+    local main="$1"
+
+    main="$(trim "$main")"
+    PARSED_PKG=""
+    PARSED_CLI=""
+    PARSED_TAG=""
+
+    [[ -z "$main" ]] && return 0
+
+    if [[ "$main" =~ @([A-Za-z0-9_-]+)$ ]]; then
+        PARSED_TAG="${BASH_REMATCH[1]}"
+        main="$(trim "${main%@"$PARSED_TAG"}")"
+    fi
+
+    if [[ "$main" =~ ^([^()[:space:]]+)\(([^()[:space:]]+)\)$ ]]; then
+        PARSED_PKG="${BASH_REMATCH[1]}"
+        PARSED_CLI="${BASH_REMATCH[2]}"
+    else
+        PARSED_PKG="$main"
+        PARSED_CLI="$main"
+    fi
+}
 
 parse_packages() {
     while IFS= read -r line; do
         line="${line%%$'\r'}"
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-        local main pkg tag
+        local main alias_part install_name manager alias_name mapping
         main="${line%%|*}"
-        pkg=$(echo "$main" | sed 's/@.*//' | xargs)
-        tag=$(echo "$main" | grep -o '@[^ ]*' | tr -d '@' || true)
-        [[ -z "$tag" || "$tag" == "unix" ]] && echo "$pkg"
+        parse_main_entry "$main"
+        [[ -z "$PARSED_PKG" ]] && continue
+        [[ -z "$PARSED_TAG" || "$PARSED_TAG" == "unix" || "$PARSED_TAG" == "$PLATFORM" ]] || continue
+
+        install_name="$PARSED_PKG"
+        if [[ "$line" == *"|"* ]]; then
+            alias_part="${line#*|}"
+            alias_part="${alias_part%%#*}"
+            alias_part="$(trim "$alias_part")"
+            for mapping in $alias_part; do
+                [[ "$mapping" != *:* ]] && continue
+                manager="${mapping%%:*}"
+                alias_name="${mapping#*:}"
+                if [[ "$manager" == "$PKG_MANAGER" ]]; then
+                    install_name="$alias_name"
+                    break
+                fi
+            done
+        fi
+
+        echo "$PARSED_PKG:$PARSED_CLI:$install_name"
     done < "$LIST_FILE"
 }
 
 needs_sudo() {
     [ "$(id -u)" -eq 0 ] && return 1
-    if is_container; then
-        [ -w /usr/local/bin ] && return 1
-    fi
+    [ "$IS_CONTAINER" -eq 1 ] && return 1
     return 0
 }
 
@@ -66,121 +138,135 @@ maybe_sudo() {
     fi
 }
 
-detect_pkg_manager() {
-    case "$(uname -s)" in
-        Darwin)
-            if ! command -v brew &> /dev/null; then
-                echo "[install] ERROR: Homebrew not found. Run bootstrap first."
-                exit 1
+preinstall_log() {
+    echo "[pre-install:$PKG_MANAGER] $1"
+}
+
+preinstall_handle_failure() {
+    local msg="$1"
+    if [[ "$STRICT" == "1" ]]; then
+        echo "[pre-install:$PKG_MANAGER] ERROR: $msg"
+        exit 1
+    fi
+    echo "[pre-install:$PKG_MANAGER] WARN: $msg"
+}
+
+refresh_package_index() {
+    preinstall_log "Updating package index..."
+    case "$PKG_MANAGER" in
+        apt)
+            if ! maybe_sudo env DEBIAN_FRONTEND=noninteractive apt-get update -qq; then
+                preinstall_handle_failure "Failed to update apt index"
             fi
-            PKG_MANAGER="brew"
             ;;
-        Linux)
-            if command -v apt-get &> /dev/null; then
-                PKG_MANAGER="apt"
-            elif command -v dnf &> /dev/null; then
-                PKG_MANAGER="dnf"
-            elif command -v pacman &> /dev/null; then
-                PKG_MANAGER="pacman"
-            else
-                echo "[install] ERROR: No supported package manager found (apt/dnf/pacman)"
-                exit 1
+        dnf)
+            if ! maybe_sudo env DNF_YUM_AUTO_YES=1 dnf makecache -q; then
+                preinstall_handle_failure "Failed to refresh dnf cache"
             fi
             ;;
-        *)
-            echo "[install] ERROR: Unsupported platform: $(uname -s)"
-            exit 1
+        pacman)
+            if ! maybe_sudo pacman -Sy --noconfirm; then
+                preinstall_handle_failure "Failed to refresh pacman index"
+            fi
+            ;;
+        brew)
+            if ! env NONINTERACTIVE=1 CI=1 brew update; then
+                preinstall_handle_failure "Failed to update Homebrew index"
+            fi
             ;;
     esac
-    echo "[install] Package manager: $PKG_MANAGER"
-}
-
-load_aliases() {
-    while IFS= read -r line; do
-        line="${line%%$'\r'}"
-        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-        [[ "$line" != *"|"* ]] && continue
-        local main alias_part pkg
-        main="${line%%|*}"
-        alias_part="${line#*|}"
-        pkg=$(echo "$main" | sed 's/@.*//' | xargs)
-        for mapping in $alias_part; do
-            echo "${mapping%%:*}:${pkg}=${mapping#*:}"
-        done
-    done < "$LIST_FILE"
-}
-
-map_package_name() {
-    local pkg="$1"
-    local result
-    result=$(echo "$PKG_ALIASES" | grep "^${PKG_MANAGER}:${pkg}=" | head -1 | cut -d= -f2)
-    [ -n "$result" ] && echo "$result" || echo "$pkg"
 }
 
 install_package() {
-    local pkg="$1"
-    local mapped
-    mapped=$(map_package_name "$pkg")
+    local install_name="$1"
 
     case "$PKG_MANAGER" in
-        apt)    maybe_sudo apt-get install -y -qq "$mapped" ;;
-        dnf)    maybe_sudo dnf install -y -q "$mapped" ;;
-        pacman) maybe_sudo pacman -S --noconfirm --needed "$mapped" ;;
-        brew)   brew install "$mapped" ;;
+        apt)
+            maybe_sudo env DEBIAN_FRONTEND=noninteractive \
+                apt-get install -y -qq \
+                -o Dpkg::Options::=--force-confdef \
+                -o Dpkg::Options::=--force-confold \
+                "$install_name"
+            ;;
+        dnf)
+            maybe_sudo env DNF_YUM_AUTO_YES=1 dnf install -y -q "$install_name"
+            ;;
+        pacman) maybe_sudo pacman -S --noconfirm --needed "$install_name" ;;
+        brew)   env NONINTERACTIVE=1 CI=1 brew install "$install_name" ;;
     esac
 }
 
-# --- Main logic ---
-
-detect_pkg_manager
-
-PKG_ALIASES=$(load_aliases)
+is_package_satisfied() {
+    local cli_name="$1"
+    command -v "$cli_name" >/dev/null 2>&1
+}
 
 # Collect packages into array (bash 3.2 compatible)
 packages=()
-while IFS= read -r pkg; do
+cli_names=()
+install_names=()
+while IFS= read -r item; do
+    [[ -z "$item" ]] && continue
+    pkg="${item%%:*}"
+    rest="${item#*:}"
+    cli="${rest%%:*}"
+    install_name="${rest#*:}"
     packages+=("$pkg")
+    cli_names+=("$cli")
+    install_names+=("$install_name")
 done < <(parse_packages)
 
-package_list=""
-for pkg in "${packages[@]}"; do
-    if [[ -z "$package_list" ]]; then
-        package_list="$pkg"
-    else
-        package_list="$package_list,$pkg"
-    fi
-done
+source "$REPO_ROOT/packages/pre-install-unix.sh"
 
-echo "[install] Running pre-install steps..."
-if ! bash "$SCRIPT_DIR/pre-install-unix.sh" \
-    --strict "$STRICT" \
-    --pkg-manager "$PKG_MANAGER" \
-    --package-list "$package_list"; then
-    echo "[install] ERROR: pre-install failed"
-    exit 1
-fi
+echo "[install] Running pre-install rules..."
+for pkg in "${packages[@]}"; do
+    run_pre_install_for_package "$pkg"
+done
+refresh_package_index
+preinstall_log "Pre-install complete"
 
 echo "[install] Installing ${#packages[@]} package(s)..."
 echo ""
 
 succeeded=0
+skipped=0
 failed=0
+skipped_packages=()
+failed_packages=()
 
-for pkg in "${packages[@]}"; do
+for i in "${!packages[@]}"; do
+    pkg="${packages[$i]}"
+    cli_name="${cli_names[$i]}"
+    install_name="${install_names[$i]}"
+
+    if is_package_satisfied "$cli_name"; then
+        echo "[install] Skipping: $pkg (already satisfied: $cli_name)"
+        skipped=$((skipped + 1))
+        skipped_packages+=("$pkg")
+        continue
+    fi
+
     echo "[install] Installing: $pkg"
-    if install_package "$pkg"; then
+    if install_package "$install_name"; then
         succeeded=$((succeeded + 1))
     else
         echo "[install] WARN: Failed to install: $pkg"
         failed=$((failed + 1))
+        failed_packages+=("$pkg")
     fi
 done
 
 echo ""
 echo "[install] =========================================="
-echo "[install] Install complete: $succeeded succeeded, $failed failed"
+echo "[install] Install complete: $succeeded succeeded, $skipped skipped, $failed failed"
+if [[ "$skipped" -gt 0 ]]; then
+    echo "[install] Skipped packages: ${skipped_packages[*]}"
+fi
+if [[ "$failed" -gt 0 ]]; then
+    echo "[install] Failed packages: ${failed_packages[*]}"
+fi
 echo "[install] =========================================="
 
-if [ "$failed" -gt 0 ]; then
+if [[ "$STRICT" == "1" && "$failed" -gt 0 ]]; then
     exit 1
 fi

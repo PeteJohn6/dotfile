@@ -5,9 +5,16 @@ function Parse-Packages {
     Get-Content $listFile | ForEach-Object {
         if ($_ -match '^\s*#' -or $_ -match '^\s*$') { return }
         $main = ($_ -split '\|')[0]
-        $pkg = ($main -split '@')[0].Trim()
+        $raw = ($main -split '@')[0].Trim()
+        if ($raw -match '^([^\(\)\s]+)\(([^\(\)\s]+)\)$') {
+            $pkg = $matches[1]; $cli = $matches[2]
+        } else {
+            $pkg = $raw; $cli = $raw
+        }
         $tag = if ($main -match '@(\w+)') { $matches[1] } else { $null }
-        if (-not $tag -or $tag -eq 'windows') { $pkg }
+        if (-not $tag -or $tag -eq 'windows') {
+            [PSCustomObject]@{ Pkg = $pkg; Cli = $cli }
+        }
     }
 }
 
@@ -49,20 +56,34 @@ Write-Host "[install] Installing $($packages.Count) package(s)..."
 Write-Host ""
 
 $succeeded = 0
+$skipped = 0
 $failed = 0
+$skippedPkgs = @()
+$failedPkgs = @()
 
-foreach ($pkg in $packages) {
-    if (Install-ScoopPackage $pkg) {
+foreach ($entry in $packages) {
+    if (Get-Command $entry.Cli -ErrorAction SilentlyContinue) {
+        Write-Host "[install] Skipping: $($entry.Pkg) (already satisfied: $($entry.Cli))"
+        $skipped++; $skippedPkgs += $entry.Pkg
+        continue
+    }
+    if (Install-ScoopPackage $entry.Pkg) {
         $succeeded++
     } else {
-        Write-Host "[install] WARN: Failed to install: $pkg"
-        $failed++
+        Write-Host "[install] WARN: Failed to install: $($entry.Pkg)"
+        $failed++; $failedPkgs += $entry.Pkg
     }
 }
 
 Write-Host ""
 Write-Host "[install] =========================================="
-Write-Host "[install] Install complete: $succeeded succeeded, $failed failed"
+Write-Host "[install] Install complete: $succeeded succeeded, $skipped skipped, $failed failed"
+if ($skipped -gt 0) {
+    Write-Host "[install] Skipped packages: $($skippedPkgs -join ' ')"
+}
+if ($failed -gt 0) {
+    Write-Host "[install] Failed packages: $($failedPkgs -join ' ')"
+}
 Write-Host "[install] =========================================="
 
 if ($failed -gt 0) {
