@@ -3,3 +3,7 @@
 
 [nvim.files]
 "packages/nvim" = "~/.config/nvim"
+
+[zsh.files]
+"packages/zsh/.zshrc" = "~/.zshrc"
+"packages/zsh/conf.d" = "~/.config/zsh/conf.d"

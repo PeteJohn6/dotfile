@@ -130,8 +130,75 @@ preinstall_neovim() {
     preinstall_log "Neovim tarball installed: $link_bin"
 }
 
+preinstall_starship() {
+    if [[ "$IS_CONTAINER" != "1" ]]; then
+        preinstall_log "Skipping starship manual install (not in container)"
+        return 0
+    fi
+
+    if command -v starship >/dev/null 2>&1; then
+        preinstall_log "Starship already available in PATH"
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        preinstall_handle_failure "curl is required for starship install"
+        return 0
+    fi
+
+    if ! command -v sh >/dev/null 2>&1; then
+        preinstall_handle_failure "sh is required for starship install"
+        return 0
+    fi
+
+    if ! mkdir -p "$INSTALL_BIN_DIR"; then
+        preinstall_handle_failure "Failed to create starship bin directory: $INSTALL_BIN_DIR"
+        return 0
+    fi
+
+    local tmp_dir installer_url installer_script target_bin
+    installer_url="https://starship.rs/install.sh"
+    target_bin="$INSTALL_BIN_DIR/starship"
+
+    if ! tmp_dir="$(mktemp -d 2>/dev/null)"; then
+        preinstall_handle_failure "Failed to create temporary directory for starship install"
+        return 0
+    fi
+
+    installer_script="$tmp_dir/starship-install.sh"
+    preinstall_log "Installing starship via official installer (latest) into: $INSTALL_BIN_DIR"
+
+    if ! curl -fsSL "$installer_url" -o "$installer_script"; then
+        cleanup_tmp_dir "$tmp_dir"
+        preinstall_handle_failure "Failed to download starship installer"
+        return 0
+    fi
+
+    if ! sh "$installer_script" -y -b "$INSTALL_BIN_DIR"; then
+        cleanup_tmp_dir "$tmp_dir"
+        preinstall_handle_failure "Failed to run starship installer"
+        return 0
+    fi
+
+    cleanup_tmp_dir "$tmp_dir"
+
+    if [[ -x "$target_bin" ]]; then
+        preinstall_log "Starship installed: $target_bin"
+        return 0
+    fi
+
+    if command -v starship >/dev/null 2>&1; then
+        preinstall_log "Starship installed and available in PATH"
+        return 0
+    fi
+
+    preinstall_handle_failure "Installed starship binary not found"
+    return 0
+}
+
 PREINSTALL_RULE_MAP=(
     "neovim:preinstall_neovim"
+    "starship:preinstall_starship"
 )
 
 preinstall_resolve_handler() {

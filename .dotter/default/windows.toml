@@ -1,3 +1,3 @@
 # Windows local configuration (auto-copied by bootstrap)
 includes = [".dotter/windows.toml"]
-packages = ["git", "nvim"]
+packages = ["git", "nvim", "starship", "powershell"]

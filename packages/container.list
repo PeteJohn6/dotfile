@@ -4,8 +4,10 @@
 # No platform tags needed for container list
 
 git
-neovim(nvim)
+zsh
+starship
 ripgrep(rg)
 fd | apt:fd-find dnf:fd-find
 fzf
 jq
+neovim(nvim)
