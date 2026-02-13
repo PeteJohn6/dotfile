@@ -1,0 +1,29 @@
+# =============================================================================
+# PowerShell Profile - Local Configuration (Example)
+# =============================================================================
+# This file demonstrates how to create machine-specific configuration.
+#
+# To use:
+# 1. Copy this file to 90-local.ps1 (without .example extension)
+# 2. Add your local settings below
+# 3. The file is gitignored, so it won't be synced
+#
+# Use cases:
+# - Machine-specific paths
+# - Private environment variables
+# - Local aliases
+# - Work-specific configurations
+
+# Example: Set private environment variables
+# $env:MY_PRIVATE_TOKEN = "secret-token-here"
+
+# Example: Add machine-specific aliases
+# Set-Alias myproject "cd C:\work\secret-project"
+
+# Example: Add local PATH entries
+# $env:PATH += ";C:\local\tools"
+
+# Example: Machine-specific function
+# function work-vpn {
+#     # Your custom VPN connection logic
+# }

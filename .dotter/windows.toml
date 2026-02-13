@@ -6,3 +6,8 @@
 # Neovim package (Windows-specific path)
 [nvim.files]
 "packages/nvim" = "~/AppData/Local/nvim"
+
+[powershell.files]
+"packages/powershell/Microsoft.PowerShell_profile.ps1" = "~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1"
+"packages/powershell/profile.d" = "~/Documents/WindowsPowerShell/profile.d"
+
