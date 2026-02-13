@@ -13,13 +13,13 @@ Dotter is a dotfile manager and templater. It creates symbolic links from the re
 ```
 .dotter/
 ├── global.toml          # Base package definitions
-├── default/             # 默认的local.toml文件
-|     ├── windows.toml   # 默认的windows local 文件
-|     ├── unix.toml      # 默认的unix local 文件
-|     \── container.toml # 默认的container local 文件
+├── default/             # Default local.toml templates
+|     ├── windows.toml   # Default Windows local file
+|     ├── unix.toml      # Default Unix local file
+|     \── container.toml # Default container local file
 ├── windows.toml         # Windows-specific configuration 
 ├── unix.toml            # Unix-specific configuration
-├── local.toml           # User-specific, dotter 默认读取的配置文件, 新环境上，第一次通过boostrap脚本从default按照对应平台复制过来，如果需要自定义，可以修改这个文件
+├── local.toml           # User-specific configuration read by dotter. On new environments, initially copied from default/ by bootstrap script according to platform. Modify this file for customization.
 └── CLAUDE.md            # This file - implementation guidance
 ```
 
@@ -150,7 +150,6 @@ depends = []
 **In unix.toml** (included from local.toml):
 ```toml
 # Override settings for Unix platforms
-# Note: Do NOT define 'packages' here
 
 [nvim.files]
 "packages/nvim" = "~/.config/nvim"

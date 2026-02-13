@@ -2,11 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## You must strictly comply every time you run.
+## You must strictly comply every time you run
 
 CRITICAL: Always execute `pwd` first. File operations are RESTRICTED to the current directory only.  
-CRITICAL: Do not modify any files under `$PWD/test` unless explicitly authorized.
-CRITICAL: Never access the `$PWD/.tree/` folder.
+CRITICAL: Do not modify files under any repository test directories (for example: `$PWD/packages/*/test`) unless explicitly authorized.
+CRITICAL: NEVER access any content under `$PWD/.tree/` IF a `.tree/` directory exists under `$PWD`.
 
 ## Repository Overview
 
@@ -25,26 +25,6 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
         - scoop: user-mode portable packages; avoids tight coupling to system software (e.g., git, uv, neovim, etc.)
     - macOS:
         - homebrew
-
-### Package Lists Format
-
-Desktop environments use `packages/packages.list`, container environments use `packages/container.list`.
-
-**`packages/packages.list`** — Format: `package[(cli_name)] [@platform] [| manager:name ...]`
-- One package per line
-- `(cli_name)` is optional; defaults to package name (e.g. `neovim(nvim)`, `ripgrep(rg)`)
-- `@unix` = Linux + macOS only
-- `@windows` = Windows only
-- No tag = all platforms
-- `| manager:name ...` = optional per-manager name overrides (e.g. `fd | apt:fd-find dnf:fd-find`)
-- Comments start with `#`
-- Empty lines are ignored
-- Whitespace is trimmed
-
-**`packages/container.list`** — Minimal package list for containers
-- One package per line, supports `package[(cli_name)]` and optional aliases
-- No platform tags needed
-- `install-unix.sh` auto-selects this file when a container environment is detected
 
 ### Workflow
 
@@ -92,19 +72,19 @@ Desktop environments use `packages/packages.list`, container environments use `p
 |-- packages/
 |   |-- packages.list         # desktop package list (supports @platform tags)
 |   |-- container.list        # minimal container package list
-|   |-- post/                 # per-tool post-install scripts
-|   |-- git/                  # git configuration
-|   `-- nvim/                 # neovim configuration
+|   |-- pre-install-unix.sh   # pre-install rules for Unix packages
+|   |-- post/                # per-package post-install scripts (named by CLI command)
+|   `-- [package_name]/       # per-package configuration
 |-- README.md                # overview and usage for users
 ```
 
-## Implementation Guidelines
+## Implementation Guidelines for Infrastructure
 
 ### Bootstrap Scripts
 
 Bootstrap scripts prepare the system with minimal dependencies (package manager, just, dotter).
 
-see `bootstrap/CLAUDE.md` for detailed bootstrap notes.
+See `bootstrap/CLAUDE.md` for detailed bootstrap notes.
 
 ### Install Scripts
 
@@ -118,12 +98,7 @@ Post orchestrators discover and run per-tool scripts from `packages/post/`.
 
 **Invocation**: Called by `just post`
 
-see `script/CLAUDE.md` for detailed install and post-installation notes.
-
-### README
-
-1. Installed programs are presented through a table
-
+See `script/CLAUDE.md` for detailed install and post-installation notes.
 
 ## Reference
 
@@ -135,24 +110,38 @@ see `script/CLAUDE.md` for detailed install and post-installation notes.
 
 - See `.dotter/CLAUDE.md` for detailed `dotter` notes
 
-## Final goal:
+## Final Goal
 
 1. `just` provides:
 
-Step-by-step installation process
----
+Step-by-step installation process:
+
+```
 just install     # sanity checks (stage: install)
 just dry         # dotter deploy --dry-run
 just stow        # dotter deploy (links + templates)
 just post        # run post scripts (nvim plugins, health checks)
+```
 
-all in one:
-------
+All in one:
+
+```
 just up          # install -> stow -> post in one shot
-just uninstall   # dotter uninstall --verbose
+just uninstall   # dotter undeploy --verbose
+```
 
 2. Each `just` step must be idempotent.
 
-## Must care for:
+## Requirements for Package Configuration
 
-1. Keep maintained packages and the README in sync
+1. Add the package to `packages/packages.list` (desktop) or `packages/container.list` (container). For the desktop list, you can use optional `@platform` tags.
+
+2. If the package requires pre-install setup, add a rule to `packages/pre-install-unix.sh` (if applicable).
+
+3. Package configuration:
+    - Lives in `packages/[package_name]/`, you can see the guide in `packages/CLAUDE.md`.
+    - Use dotter to configure the symlink/link paths for config files, you can see the guide in `.dotter/CLAUDE.md`.
+
+4. If the package requires post-install configuration, add a script to `packages/post/` (named appropriately).
+
+5. Keep maintained packages and the README in sync.

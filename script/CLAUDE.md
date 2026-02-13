@@ -48,7 +48,8 @@ pwsh script/install.ps1
 `packages/pre-install-unix.sh` uses a package rule dispatcher:
 - `install-unix.sh` iterates parsed packages and calls `run_pre_install_for_package`
 - `run_pre_install_for_package` resolves handlers via `PREINSTALL_RULE_MAP` (`pkg:handler`)
-- Current built-in rule: `neovim` -> rule function triggers when `PKG_MANAGER` is `apt`; installs Neovim tarball into `~/.local/opt/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: host `~/.local/bin/nvim`, container `/usr/local/bin/nvim`) (idempotent)
+- Built-in rule: `neovim` -> rule function triggers when `PKG_MANAGER` is `apt`; installs Neovim tarball into `~/.local/opt/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: host `~/.local/bin/nvim`, container `/usr/local/bin/nvim`) (idempotent)
+- Built-in rule: `starship` -> rule function triggers only when `IS_CONTAINER=1`; downloads and runs official installer (`https://starship.rs/install.sh`) to install latest binary into `INSTALL_BIN_DIR` (defaults: container `/usr/local/bin`)
 - If rule conditions are not met, pre-install returns without installing and `install-unix.sh` falls back to package-manager install
 - After rules run, package indexes are refreshed
 - Consistent log prefix format: `[pre-install:<manager>]`
