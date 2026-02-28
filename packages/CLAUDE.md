@@ -23,7 +23,7 @@ Desktop environments use `packages/packages.list`, container environments use `p
 **`packages/container.list`** — Minimal package list for containers
 - One package per line, supports `package[(cli_name)]` and optional aliases
 - No platform tags needed
-- `install-unix.sh` auto-selects this file when a container environment is detected
+- `install.sh` auto-selects this file when a container environment is detected
 
 
 Examples:
@@ -34,7 +34,7 @@ Examples:
 
 ### Selection Logic
 
-`install-unix.sh` uses `script/detect_platform.sh` and its unified variables:
+`install.sh` uses `script/misc.sh` and its unified variables:
 - `PLATFORM` (`linux`/`macos`)
 - `IS_CONTAINER` (`0`/`1`)
 - `PKG_MANAGER` (`apt`/`dnf`/`pacman`/`brew`)
@@ -49,7 +49,7 @@ Then selects the package list:
 ## Pre-Install
 
 Some packages trigger pre-install setup in `packages/pre-install-unix.sh` before installation.
-`install-unix.sh` selects and runs these rules through a package-to-handler map.
+`install.sh` selects and runs these rules through a package-to-handler map.
 
 Pre-install hooks allow executing custom logic before package manager installation, for example:
 

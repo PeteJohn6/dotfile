@@ -48,3 +48,20 @@ detect_platform() {
 
     return 0
 }
+
+needs_sudo() {
+    # macOS installs are user-space driven in this repo and should not use sudo.
+    [ "${PLATFORM:-}" = "macos" ] && return 1
+
+    [ "$(id -u)" -eq 0 ] && return 1
+    [ "${IS_CONTAINER:-0}" -eq 1 ] && return 1
+    return 0
+}
+
+maybe_sudo() {
+    if needs_sudo; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}

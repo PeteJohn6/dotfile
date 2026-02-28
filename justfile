@@ -14,14 +14,14 @@ default:
 # Install packages via platform-specific package managers
 install:
     @echo "==> Installing packages for {{ os_type }}..."
-    @{{ if os_type == "windows" { "pwsh script/install.ps1" } else { "bash script/install-unix.sh" } }}
+    @{{ if os_type == "windows" { "pwsh script/install.ps1" } else { "bash script/install.sh" } }}
     @echo "==> Package installation complete"
 
 # Install packages with strict pre-install checks
 [unix]
 install-force:
     @echo "==> Installing packages (strict mode) for {{ os_type }}..."
-    @bash script/install-unix.sh --strict
+    @bash script/install.sh --strict
     @echo "==> Package installation complete"
 
 [windows]
