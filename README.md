@@ -98,8 +98,7 @@ just uninstall
 │   ├── bootstrap.sh         # Linux/macOS bootstrap
 │   └── bootstrap.ps1        # Windows bootstrap
 ├── script/
-│   ├── install.sh           # Linux/macOS install script
-│   ├── misc.sh              # Unix shared runtime/privilege helpers
+│   ├── install-unix.sh      # Linux/macOS install script
 │   ├── install.ps1          # Windows install script
 │   ├── post.sh              # Unix post orchestrator
 │   └── post.ps1             # Windows post orchestrator

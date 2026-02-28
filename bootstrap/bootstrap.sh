@@ -6,8 +6,32 @@ set -euo pipefail
 
 BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP_REPO_ROOT="$(dirname "$BOOTSTRAP_DIR")"
-# shellcheck source=script/misc.sh
-source "$BOOTSTRAP_REPO_ROOT/script/misc.sh"
+# shellcheck source=script/detect_platform.sh
+source "$BOOTSTRAP_REPO_ROOT/script/detect_platform.sh"
+
+# ============================================================================
+# Shared Functions (Platform-Independent)
+# ============================================================================
+
+needs_sudo() {
+    # If running as root, don't need sudo
+    [ "$(id -u)" -eq 0 ] && return 1
+
+    # Containers do not require sudo escalation
+    [ "$IS_CONTAINER" -eq 1 ] && return 1
+
+    # Standard environment needs sudo
+    return 0
+}
+
+# Wrapper function for conditional sudo
+maybe_sudo() {
+    if needs_sudo; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
 
 # Binary directory setup
 setup_bin_directory() {

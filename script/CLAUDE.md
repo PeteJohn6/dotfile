@@ -10,13 +10,12 @@ Install scripts read the unified package list and install software using platfor
 
 ### Available Scripts
 
-- `install.sh` - Linux/macOS installation script (apt/dnf/pacman/brew)
-- `misc.sh` - Shared Unix helper library (`detect_platform`, `needs_sudo`, `maybe_sudo`)
+- `install-unix.sh` - Linux/macOS installation script (apt/dnf/pacman/brew)
 - `install.ps1` - Windows installation script (winget/scoop/chocolatey)
 
 ### How It Works
 
-1. Detect runtime via `script/misc.sh`, which outputs:
+1. Detect runtime via `script/detect_platform.sh`, which outputs:
    - `PLATFORM` (`linux` or `macos`)
    - `IS_CONTAINER` (`0` or `1`)
    - `PKG_MANAGER` (`apt`, `dnf`, `pacman`, or `brew`)
@@ -37,8 +36,8 @@ Install scripts read the unified package list and install software using platfor
 
 ```bash
 # Linux/macOS
-bash script/install.sh
-bash script/install.sh --strict
+bash script/install-unix.sh
+bash script/install-unix.sh --strict
 
 # Windows (PowerShell)
 pwsh script/install.ps1
@@ -47,23 +46,23 @@ pwsh script/install.ps1
 ### Pre-Install Behavior
 
 `packages/pre-install-unix.sh` uses a package rule dispatcher:
-- `install.sh` iterates parsed packages and calls `run_pre_install_for_package`
+- `install-unix.sh` iterates parsed packages and calls `run_pre_install_for_package`
 - `run_pre_install_for_package` resolves handlers via `PREINSTALL_RULE_MAP` (`pkg:handler`)
 - Built-in rule: `neovim` -> rule function triggers when `PKG_MANAGER` is `apt`; installs Neovim tarball into `~/.local/opt/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: host `~/.local/bin/nvim`, container `/usr/local/bin/nvim`) (idempotent)
 - Built-in rule: `starship` -> rule function triggers only when `IS_CONTAINER=1`; downloads and runs official installer (`https://starship.rs/install.sh`) to install latest binary into `INSTALL_BIN_DIR` (defaults: container `/usr/local/bin`)
-- If rule conditions are not met, pre-install returns without installing and `install.sh` falls back to package-manager install
+- If rule conditions are not met, pre-install returns without installing and `install-unix.sh` falls back to package-manager install
 - After rules run, package indexes are refreshed
 - Consistent log prefix format: `[pre-install:<manager>]`
 
-`packages/pre-install-unix.sh` should not call `misc.sh`; it relies on context provided by `install.sh`.
-`install.sh` provides `INSTALL_BIN_DIR` for binary link targets (default: host `~/.local/bin`, container `/usr/local/bin`) and prepends it to `PATH` for the current install process.
+`packages/pre-install-unix.sh` should not call `detect_platform.sh`; it relies on context provided by `install-unix.sh`.
+`install-unix.sh` provides `INSTALL_BIN_DIR` for binary link targets (default: host `~/.local/bin`, container `/usr/local/bin`) and prepends it to `PATH` for the current install process.
 
 ### Strict vs Non-Strict
 
-- `install.sh` default mode is non-strict (`--strict` omitted)
+- `install-unix.sh` default mode is non-strict (`--strict` omitted)
   - Failed package installs are recorded, but script exits `0`
   - Supports "manual fix then rerun install" workflow
-- `install.sh --strict`
+- `install-unix.sh --strict`
   - Any failed package install causes final non-zero exit
 - `packages/pre-install-unix.sh` follows the same strict flag through `preinstall_handle_failure`
 

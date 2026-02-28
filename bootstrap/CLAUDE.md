@@ -41,11 +41,11 @@ Bootstrap scripts prepare the system with minimal dependencies required to run t
 
 ### Linux/macOS (`bootstrap.sh`)
 
-1. **Unified Detection**: Uses `script/misc.sh` to set:
+1. **Unified Detection**: Uses `script/detect_platform.sh` to set:
    - `PLATFORM` (`linux`/`macos`)
    - `IS_CONTAINER` (`0`/`1`)
    - `PKG_MANAGER` (`apt`/`dnf`/`pacman`/`brew`)
-2. **Environment Handling**: Uses `needs_sudo()` in `script/misc.sh` to decide sudo usage
+2. **Environment Handling**: Uses root/container state to decide sudo usage
 3. **Bin Directory Setup**: Creates `bin/` and adds to `.gitignore`
 4. **Self-Sufficiency Check**: Installs curl/wget if needed (for dotter download)
 5. **Package Manager Setup**:
@@ -66,23 +66,20 @@ Bootstrap scripts prepare the system with minimal dependencies required to run t
 Bootstrap automatically detects the execution environment and conditionally uses `sudo`:
 
 ### Container Environments
-- Detected via unified `misc.sh` (`IS_CONTAINER=1`)
+- Detected via unified `detect_platform.sh` (`IS_CONTAINER=1`)
 - No `sudo` used
 
-### Standard Linux
+### Standard Linux/macOS
 - Uses `sudo` for system installations unless running as root
 
 ### Root User
 - Never uses `sudo` (not needed)
 
-### macOS
-- Never uses `sudo` in this repository's Unix scripts
-
 This allows bootstrap to work seamlessly in:
 - Docker/Podman containers running as root
 - Docker/Podman containers running as non-root
 - Standard Linux systems requiring privilege elevation
-- macOS systems (no sudo path by design)
+- macOS systems (Homebrew typically doesn't need sudo)
 
 ## Files
 
@@ -90,12 +87,9 @@ This allows bootstrap to work seamlessly in:
 - `bootstrap/bootstrap.sh` - Unified bootstrap for Linux/macOS
 - `bootstrap/bootstrap.ps1` - Windows bootstrap
 
-### Shared Helper Functions (`script/misc.sh`)
-- `detect_platform()` - Detects platform/container state and package manager
-- `needs_sudo()` - Determines if sudo is required (always false on macOS)
+### Helper Functions (`bootstrap.sh`)
+- `needs_sudo()` - Determines if sudo is required
 - `maybe_sudo()` - Conditionally wraps commands with sudo
-
-### Bootstrap Functions (`bootstrap.sh`)
 - `setup_bin_directory()` - Creates bin/ and updates .gitignore
 - `download_dotter()` - Downloads dotter binary from GitHub
 - `bootstrap_linux()` - Linux-specific bootstrap logic

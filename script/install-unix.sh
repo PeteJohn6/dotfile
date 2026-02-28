@@ -13,14 +13,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "[install] ERROR: Unknown argument: $1"
-            echo "[install] Usage: bash script/install.sh [--strict]"
+            echo "[install] Usage: bash script/install-unix.sh [--strict]"
             exit 2
             ;;
     esac
 done
 
-# shellcheck source=script/misc.sh
-source "$SCRIPT_DIR/misc.sh"
+# shellcheck source=script/detect_platform.sh
+source "$SCRIPT_DIR/detect_platform.sh"
 
 if ! detect_platform; then
     echo "[install] ERROR: Failed to detect platform"
@@ -122,6 +122,20 @@ parse_packages() {
 
         echo "$PARSED_PKG:$PARSED_CLI:$install_name"
     done < "$LIST_FILE"
+}
+
+needs_sudo() {
+    [ "$(id -u)" -eq 0 ] && return 1
+    [ "$IS_CONTAINER" -eq 1 ] && return 1
+    return 0
+}
+
+maybe_sudo() {
+    if needs_sudo; then
+        sudo "$@"
+    else
+        "$@"
+    fi
 }
 
 preinstall_log() {
