@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This file is a rule library sourced by install-unix.sh.
+# This file is a rule library sourced by install.sh.
 # Required caller context:
 # - PLATFORM / IS_CONTAINER / PKG_MANAGER / STRICT / INSTALL_BIN_DIR
 # - preinstall_log()

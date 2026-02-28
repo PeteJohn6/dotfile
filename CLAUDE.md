@@ -37,7 +37,7 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
     c. Uses the package manager to install: `just` (task runner) and `dotter` (dotfiles manager)
 
 2. `just` runs the following tasks in order:
-    1. **Install** (`script/install-unix.sh` | `script/install.ps1`)
+    1. **Install** (`script/install.sh` | `script/install.ps1`)
         a. Detects runtime context (`PLATFORM` / `IS_CONTAINER` / `PKG_MANAGER`)
         b. Parses `packages/packages.list` (desktop) or `packages/container.list` (container)
         c. Runs package-driven pre-install rules (e.g. binary fallback installs using `INSTALL_BIN_DIR`: host default `~/.local/bin`, container default `/usr/local/bin`, and prepends it to `PATH` for current install run)
@@ -65,7 +65,8 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 |   |-- bootstrap.sh          # Linux/macOS dependency bootstrap
 |   `-- bootstrap.ps1         # Windows dependency bootstrap
 |-- script/
-|   |-- install-unix.sh      # Linux/macOS install script
+|   |-- install.sh           # Linux/macOS install script
+|   |-- misc.sh             # Unix shared runtime/privilege helpers
 |   |-- install.ps1          # Windows install script
 |   |-- post.sh              # Unix post orchestrator
 |   `-- post.ps1             # Windows post orchestrator
