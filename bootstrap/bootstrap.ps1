@@ -9,6 +9,91 @@ function Log($msg)  { Write-Host "[bootstrap] $msg" -ForegroundColor Cyan }
 function Warn($msg) { Write-Warning "[bootstrap] $msg" }
 function Err($msg)  { Write-Error "[bootstrap] $msg"; exit 1 }
 
+function Test-DotterBinary {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path
+    )
+
+    if (-not (Test-Path $Path -PathType Leaf)) {
+        return $null
+    }
+
+    try {
+        $version = & $Path --version 2>$null
+        if ([string]::IsNullOrWhiteSpace($version)) {
+            return $null
+        }
+        return $version.Trim()
+    }
+    catch {
+        return $null
+    }
+}
+
+function Get-AssetUrls {
+    param(
+        [Parameter(Mandatory = $true)]$ReleaseInfo
+    )
+
+    @(
+        $ReleaseInfo.assets |
+            ForEach-Object { $_.browser_download_url } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    )
+}
+
+function Resolve-DotterAssetUrl {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$AssetUrls,
+        [Parameter(Mandatory = $true)][string]$Arch
+    )
+
+    $bestUrl = $null
+    $bestScore = [int]::MinValue
+
+    foreach ($url in $AssetUrls) {
+        $name = [IO.Path]::GetFileName($url).ToLowerInvariant()
+        if ($name -match '\.(sha256|sha512|sig|asc|txt)$') {
+            continue
+        }
+        if ($name -notmatch 'windows') {
+            continue
+        }
+        if ($name -notmatch 'dotter') {
+            continue
+        }
+        if ($name -notmatch '\.exe$') {
+            continue
+        }
+
+        $score = 50
+        switch ($Arch) {
+            'arm64' {
+                if ($name -match 'arm64|aarch64') { $score = 100 }
+                elseif ($name -match 'x64|x86_64|amd64') { $score = 80 }
+                else { continue }
+            }
+            default {
+                if ($name -match 'x64|x86_64|amd64') { $score = 100 }
+                elseif ($name -match 'arm64|aarch64') { $score = 70 }
+                else { continue }
+            }
+        }
+
+        if ($score -gt $bestScore) {
+            $bestScore = $score
+            $bestUrl = $url
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($bestUrl)) {
+        $list = ($AssetUrls | ForEach-Object { "  - $_" }) -join "`n"
+        Err "Failed to match a Windows dotter asset for arch '$Arch'. Available assets:`n$list"
+    }
+
+    return $bestUrl
+}
+
 Log "Starting bootstrap process..."
 
 # Navigate to repository root (parent of script directory)
@@ -76,25 +161,55 @@ else {
 }
 
 # Download dotter to bin/
-if (Test-Path "bin\dotter.exe") {
-    Log "dotter already exists: $(& bin\dotter.exe --version)"
-}
-else {
+$dotterPath = "bin\dotter.exe"
+$dotterVersion = Test-DotterBinary -Path $dotterPath
+if ($dotterVersion) {
+    Log "dotter already exists: $dotterVersion"
+} else {
+    if (Test-Path $dotterPath) {
+        Warn "Existing bin\dotter.exe is invalid, re-downloading..."
+        Remove-Item -Path $dotterPath -Force
+    }
+
     Log "Downloading dotter to bin\..."
 
     try {
         # Fetch latest version from GitHub
-        $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/SuperCuber/dotter/releases/latest"
-        $dotterVersion = $releaseInfo.tag_name -replace '^v', ''
+        $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/SuperCuber/dotter/releases/latest" -ErrorAction Stop
+        $releaseVersion = $releaseInfo.tag_name -replace '^v', ''
+        if ([string]::IsNullOrWhiteSpace($releaseVersion)) {
+            Err "Failed to resolve dotter release version"
+        }
+        Log "Latest dotter version: v$releaseVersion"
 
-        Log "Latest dotter version: v$dotterVersion"
+        $assetUrls = Get-AssetUrls -ReleaseInfo $releaseInfo
+        if ($assetUrls.Count -eq 0) {
+            Err "No release assets returned by GitHub API"
+        }
 
-        # Download dotter binary for Windows
-        $dotterUrl = "https://github.com/SuperCuber/dotter/releases/download/v${dotterVersion}/dotter-windows-x64.exe"
+        $arch = if ($env:PROCESSOR_ARCHITECTURE -match 'ARM64') { 'arm64' } else { 'x64' }
+        $dotterUrl = Resolve-DotterAssetUrl -AssetUrls $assetUrls -Arch $arch
+        Log "Selected dotter asset: $([IO.Path]::GetFileName($dotterUrl))"
 
-        Invoke-WebRequest -Uri $dotterUrl -OutFile "bin\dotter.exe"
+        $tmpPath = "bin\dotter.exe.tmp"
+        if (Test-Path $tmpPath) {
+            Remove-Item -Path $tmpPath -Force
+        }
+        Invoke-WebRequest -Uri $dotterUrl -OutFile $tmpPath -ErrorAction Stop
 
-        Log "dotter downloaded successfully: $(& bin\dotter.exe --version)"
+        $tmpFile = Get-Item $tmpPath -ErrorAction Stop
+        if ($tmpFile.Length -lt 102400) {
+            Remove-Item -Path $tmpPath -Force -ErrorAction SilentlyContinue
+            Err "Downloaded dotter binary is unexpectedly small ($($tmpFile.Length) bytes)"
+        }
+
+        Move-Item -Path $tmpPath -Destination $dotterPath -Force
+        $dotterVersion = Test-DotterBinary -Path $dotterPath
+        if (-not $dotterVersion) {
+            Err "Downloaded file is not a valid dotter binary"
+        }
+
+        Log "dotter downloaded successfully: $dotterVersion"
     }
     catch {
         Err "Failed to download dotter: $_"

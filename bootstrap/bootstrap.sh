@@ -21,20 +21,149 @@ setup_bin_directory() {
     fi
 }
 
+# Parse browser_download_url entries from GitHub release JSON.
+extract_release_asset_urls() {
+    local release_json=$1
+    printf '%s\n' "$release_json" | sed -nE 's/.*"browser_download_url":[[:space:]]*"([^"]+)".*/\1/p'
+}
+
+# Verify dotter binary can execute and report version.
+is_valid_dotter_binary() {
+    local dotter_path=$1
+    [ -x "$dotter_path" ] || return 1
+    "$dotter_path" --version >/dev/null 2>&1
+}
+
+# Resolve the best release asset URL for the requested platform + architecture.
+resolve_dotter_asset_url() {
+    local target_platform=$1
+    local arch=$2
+    local release_json=$3
+    local asset_urls asset_url asset_name lower_name score best_score best_url
+
+    asset_urls=$(extract_release_asset_urls "$release_json")
+    if [ -z "$asset_urls" ]; then
+        echo "[bootstrap] ERROR: No release assets found in GitHub response" >&2
+        return 1
+    fi
+
+    best_score=-1
+    best_url=""
+
+    while IFS= read -r asset_url; do
+        [ -n "$asset_url" ] || continue
+        asset_name="${asset_url##*/}"
+        lower_name=$(printf '%s' "$asset_name" | tr '[:upper:]' '[:lower:]')
+
+        # Ignore checksum/signature artifacts.
+        case "$lower_name" in
+            *.sha256*|*.sha512*|*.sig|*.asc|*.txt)
+                continue
+                ;;
+        esac
+
+        score=0
+        case "$target_platform" in
+            macos)
+                case "$lower_name" in
+                    *macos*|*apple-darwin*)
+                        ;;
+                    *)
+                        continue
+                        ;;
+                esac
+                case "$arch" in
+                    arm64)
+                        case "$lower_name" in
+                            *arm64*|*aarch64*) score=100 ;;
+                            *universal*) score=80 ;;
+                            *) continue ;;
+                        esac
+                        ;;
+                    x64)
+                        case "$lower_name" in
+                            *x64*|*x86_64*|*amd64*) score=100 ;;
+                            *universal*) score=80 ;;
+                            *) continue ;;
+                        esac
+                        ;;
+                    *)
+                        continue
+                        ;;
+                esac
+                ;;
+            linux)
+                case "$lower_name" in
+                    *linux*)
+                        ;;
+                    *)
+                        continue
+                        ;;
+                esac
+                case "$arch" in
+                    arm64)
+                        case "$lower_name" in
+                            *arm64*|*aarch64*) score=90 ;;
+                            *) continue ;;
+                        esac
+                        ;;
+                    x64)
+                        case "$lower_name" in
+                            *x64*|*x86_64*|*amd64*) score=90 ;;
+                            *) continue ;;
+                        esac
+                        ;;
+                    *)
+                        continue
+                        ;;
+                esac
+                case "$lower_name" in
+                    *musl*) score=$((score + 10)) ;;
+                esac
+                ;;
+            *)
+                echo "[bootstrap] ERROR: Unsupported platform: $target_platform" >&2
+                return 1
+                ;;
+        esac
+
+        case "$lower_name" in
+            *.tar.gz|*.tgz|*.zip)
+                score=$((score - 20))
+                ;;
+        esac
+
+        if [ "$score" -gt "$best_score" ]; then
+            best_score=$score
+            best_url=$asset_url
+        fi
+    done <<< "$asset_urls"
+
+    if [ -z "$best_url" ]; then
+        echo "[bootstrap] ERROR: Failed to match dotter asset for ${target_platform}-${arch}" >&2
+        echo "[bootstrap] Available assets:" >&2
+        printf '%s\n' "$asset_urls" | sed 's/^/[bootstrap]   - /' >&2
+        return 1
+    fi
+
+    printf '%s\n' "$best_url"
+}
+
 # Download dotter binary
 download_dotter() {
     local target_platform=$1
     local arch=$2
+    local release_json dotter_version dotter_url tmp_path
 
     echo "[bootstrap] Downloading dotter for ${target_platform}-${arch}..."
 
     # Define download function based on available tool
     if command -v curl &> /dev/null; then
         download_file() {
-            curl -L -o "$1" "$2"
+            curl -fL --retry 3 --connect-timeout 10 -o "$1" "$2"
         }
         download_string() {
-            curl -s "$1"
+            curl -fsSL "$1"
         }
     elif command -v wget &> /dev/null; then
         download_file() {
@@ -49,36 +178,56 @@ download_dotter() {
     fi
 
     # Fetch latest version from GitHub
-    DOTTER_VERSION=$(download_string https://api.github.com/repos/SuperCuber/dotter/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+    if ! release_json=$(download_string https://api.github.com/repos/SuperCuber/dotter/releases/latest); then
+        echo "[bootstrap] ERROR: Failed to fetch dotter release metadata"
+        exit 1
+    fi
+    dotter_version=$(printf '%s\n' "$release_json" | sed -nE 's/.*"tag_name":[[:space:]]*"v([^"]+)".*/\1/p' | head -n1)
 
-    if [ -z "$DOTTER_VERSION" ]; then
+    if [ -z "$dotter_version" ]; then
         echo "[bootstrap] ERROR: Failed to fetch dotter version"
         exit 1
     fi
 
-    echo "[bootstrap] Latest dotter version: v${DOTTER_VERSION}"
+    echo "[bootstrap] Latest dotter version: v${dotter_version}"
+    if ! dotter_url=$(resolve_dotter_asset_url "$target_platform" "$arch" "$release_json"); then
+        exit 1
+    fi
+    echo "[bootstrap] Selected dotter asset: ${dotter_url##*/}"
 
-    # Download to bin/
-    case "$target_platform" in
-        linux)
-            DOTTER_URL="https://github.com/SuperCuber/dotter/releases/download/v${DOTTER_VERSION}/dotter-linux-${arch}-musl"
-            ;;
-        macos)
-            DOTTER_URL="https://github.com/SuperCuber/dotter/releases/download/v${DOTTER_VERSION}/dotter-macos-${arch}"
-            ;;
-        *)
-            echo "[bootstrap] ERROR: Unsupported platform: $target_platform"
-            exit 1
-            ;;
-    esac
-
-    if ! download_file "bin/dotter" "$DOTTER_URL"; then
+    tmp_path="bin/.dotter.tmp.$$"
+    rm -f "$tmp_path"
+    if ! download_file "$tmp_path" "$dotter_url"; then
         echo "[bootstrap] ERROR: Failed to download dotter"
+        rm -f "$tmp_path"
         exit 1
     fi
 
-    chmod +x bin/dotter
-    echo "[bootstrap] dotter downloaded successfully: $(bin/dotter --version)"
+    chmod +x "$tmp_path"
+    if ! is_valid_dotter_binary "$tmp_path"; then
+        echo "[bootstrap] ERROR: Downloaded file is not a valid dotter binary"
+        rm -f "$tmp_path"
+        exit 1
+    fi
+    mv "$tmp_path" bin/dotter
+
+    echo "[bootstrap] dotter downloaded successfully: $(bin/dotter --version 2>/dev/null)"
+}
+
+ensure_dotter() {
+    local target_platform=$1
+    local arch=$2
+
+    if [ -f bin/dotter ]; then
+        if is_valid_dotter_binary "bin/dotter"; then
+            echo "[bootstrap] dotter already exists: $(bin/dotter --version 2>/dev/null)"
+            return 0
+        fi
+        echo "[bootstrap] Existing bin/dotter is invalid, re-downloading..."
+        rm -f bin/dotter
+    fi
+
+    download_dotter "$target_platform" "$arch"
 }
 
 # ============================================================================
@@ -126,18 +275,13 @@ bootstrap_linux() {
         echo "[bootstrap] just installed: $(just --version)"
     fi
 
-    # Download dotter to bin/
-    if [ -f bin/dotter ]; then
-        echo "[bootstrap] dotter already exists: $(bin/dotter --version)"
-    else
-        ARCH=$(uname -m)
-        case "$ARCH" in
-            x86_64) DOTTER_ARCH="x64" ;;
-            aarch64|arm64) DOTTER_ARCH="arm64" ;;
-            *) echo "[bootstrap] ERROR: Unsupported architecture: $ARCH"; exit 1 ;;
-        esac
-        download_dotter "linux" "$DOTTER_ARCH"
-    fi
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64) DOTTER_ARCH="x64" ;;
+        aarch64|arm64) DOTTER_ARCH="arm64" ;;
+        *) echo "[bootstrap] ERROR: Unsupported architecture: $ARCH"; exit 1 ;;
+    esac
+    ensure_dotter "linux" "$DOTTER_ARCH"
 }
 
 # ============================================================================
@@ -188,17 +332,12 @@ bootstrap_macos() {
         echo "[bootstrap] just installed: $(just --version)"
     fi
 
-    # Download dotter to bin/
-    if [ -f bin/dotter ]; then
-        echo "[bootstrap] dotter already exists: $(bin/dotter --version)"
-    else
-        case "$ARCH" in
-            x86_64) DOTTER_ARCH="x64" ;;
-            arm64) DOTTER_ARCH="arm64" ;;
-            *) echo "[bootstrap] ERROR: Unsupported architecture: $ARCH"; exit 1 ;;
-        esac
-        download_dotter "macos" "$DOTTER_ARCH"
-    fi
+    case "$ARCH" in
+        x86_64) DOTTER_ARCH="x64" ;;
+        arm64) DOTTER_ARCH="arm64" ;;
+        *) echo "[bootstrap] ERROR: Unsupported architecture: $ARCH"; exit 1 ;;
+    esac
+    ensure_dotter "macos" "$DOTTER_ARCH"
 }
 
 # ============================================================================
