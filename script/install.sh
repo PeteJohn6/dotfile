@@ -95,7 +95,8 @@ parse_main_entry() {
 }
 
 parse_packages() {
-    while IFS= read -r line; do
+    # Accept a final package entry even when the list file lacks a trailing newline.
+    while IFS= read -r line || [[ -n "$line" ]]; do
         line="${line%%$'\r'}"
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
         local main alias_part install_name manager alias_name mapping
@@ -191,7 +192,7 @@ is_package_satisfied() {
 packages=()
 cli_names=()
 install_names=()
-while IFS= read -r item; do
+while IFS= read -r item || [[ -n "$item" ]]; do
     [[ -z "$item" ]] && continue
     pkg="${item%%:*}"
     rest="${item#*:}"
