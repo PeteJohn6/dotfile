@@ -26,6 +26,7 @@ Install scripts read the unified package list and install software using platfor
 3. Parse the list file (skip comments, handle whitespace, filter by `@platform` tag)
    - Supports `package[(cli_name)]`
    - `cli_name` defaults to package name when omitted
+   - Handles package lists whose final line does not end with a trailing newline
 4. Source `packages/pre-install-unix.sh` as a rule library
 5. Run package-driven pre-install rules using the rule-map selector
 6. Refresh package indexes after pre-install rules
