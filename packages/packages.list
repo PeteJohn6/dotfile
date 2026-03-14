@@ -20,6 +20,7 @@ zoxide
 eza
 lsd
 starship
+tmux @unix
 
 # -- terminal / GUI --
 alacritty @windows
@@ -27,7 +28,6 @@ wezterm @windows
 zed @windows
 neovide @windows
 nushell @windows
-tmux @windows
 zellij @windows
 
 # -- language toolchains --
