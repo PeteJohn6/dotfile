@@ -66,50 +66,95 @@ trim() {
     printf '%s' "$s"
 }
 
+parse_error() {
+    local msg="$1"
+    echo "[install] ERROR: Failed to parse $LIST_FILE:${CURRENT_LINE_NUMBER:-?}: $msg" >&2
+    exit 1
+}
+
+is_supported_platform() {
+    case "$1" in
+        windows|macos|linux) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+platform_matches_current() {
+    local candidate
+    for candidate in "$@"; do
+        if [[ "$candidate" == "$PLATFORM" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 PARSED_PKG=""
 PARSED_CLI=""
-PARSED_TAG=""
+PARSED_PLATFORMS=()
 
 parse_main_entry() {
     local main="$1"
+    local selector token
+    local parsed_platforms=()
 
     main="$(trim "$main")"
     PARSED_PKG=""
     PARSED_CLI=""
-    PARSED_TAG=""
+    PARSED_PLATFORMS=()
 
     [[ -z "$main" ]] && return 0
 
-    if [[ "$main" =~ @([A-Za-z0-9_-]+)$ ]]; then
-        PARSED_TAG="${BASH_REMATCH[1]}"
-        main="$(trim "${main%@"$PARSED_TAG"}")"
+    if [[ "$main" =~ @([A-Za-z0-9_-]+(,[A-Za-z0-9_-]+)*)$ ]]; then
+        selector="${BASH_REMATCH[1]}"
+        IFS=',' read -r -a parsed_platforms <<< "$selector"
+        for token in "${parsed_platforms[@]}"; do
+            is_supported_platform "$token" || parse_error "unsupported platform '$token' in selector"
+            PARSED_PLATFORMS+=("$token")
+        done
+        main="$(trim "${main%@"$selector"}")"
+    fi
+
+    if [[ "$main" == *"@"* ]]; then
+        parse_error "unsupported selector syntax; expected @platform[,platform...] without spaces"
     fi
 
     if [[ "$main" =~ ^([^()[:space:]]+)\(([^()[:space:]]+)\)$ ]]; then
         PARSED_PKG="${BASH_REMATCH[1]}"
         PARSED_CLI="${BASH_REMATCH[2]}"
-    else
+    elif [[ "$main" =~ ^[^()[:space:]]+$ ]]; then
         PARSED_PKG="$main"
         PARSED_CLI="$main"
+    else
+        parse_error "invalid package entry syntax: '$main'"
     fi
 }
 
 parse_packages() {
+    local line_number=0
+
     # Accept a final package entry even when the list file lacks a trailing newline.
     while IFS= read -r line || [[ -n "$line" ]]; do
+        line_number=$((line_number + 1))
+        CURRENT_LINE_NUMBER="$line_number"
         line="${line%%$'\r'}"
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
         local main alias_part install_name manager alias_name mapping
         main="${line%%|*}"
         parse_main_entry "$main"
         [[ -z "$PARSED_PKG" ]] && continue
-        [[ -z "$PARSED_TAG" || "$PARSED_TAG" == "unix" || "$PARSED_TAG" == "$PLATFORM" ]] || continue
+        if [[ "${#PARSED_PLATFORMS[@]}" -gt 0 ]] && ! platform_matches_current "${PARSED_PLATFORMS[@]}"; then
+            continue
+        fi
 
         install_name="$PARSED_PKG"
         if [[ "$line" == *"|"* ]]; then
             alias_part="${line#*|}"
             alias_part="${alias_part%%#*}"
             alias_part="$(trim "$alias_part")"
+            if [[ "$alias_part" =~ (^|[[:space:]])@ ]]; then
+                parse_error "platform selectors must appear before | aliases"
+            fi
             for mapping in $alias_part; do
                 [[ "$mapping" != *:* ]] && continue
                 manager="${mapping%%:*}"

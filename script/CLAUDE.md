@@ -23,8 +23,9 @@ Install scripts read the unified package list and install software using platfor
 2. Select package list:
    - `IS_CONTAINER=1` -> `packages/container.list`
    - `IS_CONTAINER=0` -> `packages/packages.list`
-3. Parse the list file (skip comments, handle whitespace, filter by `@platform` tag)
+3. Parse the list file (skip comments, handle whitespace, filter by comma-separated `@platform` tags)
    - Supports `package[(cli_name)]`
+   - Supports optional selectors like `@windows` or `@windows,macos`
    - `cli_name` defaults to package name when omitted
    - Handles package lists whose final line does not end with a trailing newline
 4. Source `packages/pre-install-unix.sh` as a rule library

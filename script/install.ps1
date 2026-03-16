@@ -1,19 +1,105 @@
 #Requires -Version 7
 $listFile = Join-Path $PSScriptRoot "..\packages\packages.list"
+$currentPlatform = 'windows'
+$supportedPlatforms = @('windows', 'macos', 'linux')
+
+function Throw-ParseError {
+    param(
+        [int]$LineNumber,
+        [string]$Message
+    )
+
+    throw "[install] ERROR: Failed to parse ${listFile}:${LineNumber}: $Message"
+}
+
+function Test-PlatformMatch {
+    param(
+        [string[]]$Platforms,
+        [string]$CurrentPlatform
+    )
+
+    if (-not $Platforms -or $Platforms.Count -eq 0) {
+        return $true
+    }
+
+    return $Platforms -contains $CurrentPlatform
+}
+
+function Parse-MainEntry {
+    param(
+        [string]$Main,
+        [int]$LineNumber
+    )
+
+    $main = $Main.Trim()
+    $platforms = @()
+
+    if (-not $main) {
+        return [PSCustomObject]@{
+            Pkg = ''
+            Cli = ''
+            Platforms = @()
+        }
+    }
+
+    $selectorMatch = [regex]::Match($main, '@([A-Za-z0-9_-]+(?:,[A-Za-z0-9_-]+)*)$')
+    if ($selectorMatch.Success) {
+        $selector = $selectorMatch.Groups[1].Value
+        $platforms = @($selector.Split(','))
+        foreach ($platform in $platforms) {
+            if ($platform -notin $supportedPlatforms) {
+                Throw-ParseError -LineNumber $LineNumber -Message "unsupported platform '$platform' in selector"
+            }
+        }
+
+        $main = $main.Substring(0, $selectorMatch.Index).Trim()
+    }
+
+    if ($main -match '@') {
+        Throw-ParseError -LineNumber $LineNumber -Message "unsupported selector syntax; expected @platform[,platform...] without spaces"
+    }
+
+    if ($main -match '^([^\(\)\s]+)\(([^\(\)\s]+)\)$') {
+        return [PSCustomObject]@{
+            Pkg = $matches[1]
+            Cli = $matches[2]
+            Platforms = $platforms
+        }
+    }
+
+    if ($main -match '^[^\(\)\s]+$') {
+        return [PSCustomObject]@{
+            Pkg = $main
+            Cli = $main
+            Platforms = $platforms
+        }
+    }
+
+    Throw-ParseError -LineNumber $LineNumber -Message "invalid package entry syntax: '$main'"
+}
 
 function Parse-Packages {
+    $lineNumber = 0
+
     Get-Content $listFile | ForEach-Object {
+        $lineNumber++
         if ($_ -match '^\s*#' -or $_ -match '^\s*$') { return }
-        $main = ($_ -split '\|')[0]
-        $raw = ($main -split '@')[0].Trim()
-        if ($raw -match '^([^\(\)\s]+)\(([^\(\)\s]+)\)$') {
-            $pkg = $matches[1]; $cli = $matches[2]
-        } else {
-            $pkg = $raw; $cli = $raw
+
+        $segments = $_ -split '\|', 2
+        if ($segments.Count -gt 1) {
+            $aliasPart = (($segments[1] -split '#', 2)[0]).Trim()
+            if ($aliasPart -match '(^|\s)@') {
+                Throw-ParseError -LineNumber $lineNumber -Message "platform selectors must appear before | aliases"
+            }
         }
-        $tag = if ($main -match '@(\w+)') { $matches[1] } else { $null }
-        if (-not $tag -or $tag -eq 'windows') {
-            [PSCustomObject]@{ Pkg = $pkg; Cli = $cli }
+
+        $parsed = Parse-MainEntry -Main $segments[0] -LineNumber $lineNumber
+        if (-not $parsed.Pkg) { return }
+        if (Test-PlatformMatch -Platforms $parsed.Platforms -CurrentPlatform $currentPlatform) {
+            [PSCustomObject]@{
+                Pkg = $parsed.Pkg
+                Cli = $parsed.Cli
+            }
         }
     }
 }

@@ -2,18 +2,19 @@
 
 ## Package Lists
 
-- `packages.list` — Full package list for desktop Unix and Windows (supports `@platform` tags)
+- `packages.list` — Full package list for desktop Linux, macOS, and Windows (supports comma-separated `@platform` tags)
 - `container.list` — Minimal package list for container environments (no platform tags)
 
 ### Package Lists Format
 
 Desktop environments use `packages/packages.list`, container environments use `packages/container.list`.
 
-**`packages/packages.list`** — Format: `package[(cli_name)] [@platform] [| manager:name ...]`
+**`packages/packages.list`** — Format: `package[(cli_name)] [@platform[,platform...]] [| manager:name ...]`
 - One package per line
 - `(cli_name)` is optional; defaults to package name (e.g. `neovim(nvim)`, `ripgrep(rg)`)
-- `@unix` = Linux + macOS only
-- `@windows` = Windows only
+- `@windows`, `@macos`, `@linux` target a single host platform
+- `@windows,macos` means Windows OR macOS
+- Selectors must not contain spaces
 - No tag = all platforms
 - `| manager:name ...` = optional per-manager name overrides (e.g. `fd | apt:fd-find dnf:fd-find`)
 - Comments start with `#`
@@ -29,6 +30,7 @@ Desktop environments use `packages/packages.list`, container environments use `p
 Examples:
 
 - `neovim(nvim)`
+- `wezterm @windows,macos`
 - `ripgrep(rg)`
 - `fd | apt:fd-find dnf:fd-find`
 
@@ -41,7 +43,7 @@ Examples:
 
 Then selects the package list:
 
-- **Host (`IS_CONTAINER=0`)** → `packages/packages.list` (filtered by `@platform` tags)
+- **Host (`IS_CONTAINER=0`)** → `packages/packages.list` (filtered by comma-separated `@platform` tags)
 - **Container (`IS_CONTAINER=1`)** → `packages/container.list` (plain list, no tags needed)
 
 `container.list` pairs with `.dotter/container.toml` — the list controls which packages are installed, while the dotter profile controls which dotfiles are deployed.

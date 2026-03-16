@@ -105,7 +105,7 @@ just uninstall
 │   └── post.ps1             # Windows post orchestrator
 └── packages/
     ├── pre-install-unix.sh  # Unix pre-install rule library
-    ├── packages.list        # Unified package list (with @platform tags)
+    ├── packages.list        # Unified package list (with comma-separated @platform tags)
     ├── container.list       # Minimal package list for containers
     ├── post/                # Per-tool post-install scripts
     ├── git/                 # Git configuration

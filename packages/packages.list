@@ -1,7 +1,8 @@
 # packages.list
-# Format: package[(cli_name)] [@platform] [| manager:name ...]
-# Supported platforms: unix (Linux+macOS), windows
-# No tag = all platforms
+# Format: package[(cli_name)] [@platform[,platform...]] [| manager:name ...]
+# Supported platforms: windows, macos, linux
+# No selector = all platforms
+# Multi-platform selectors use a single token with no spaces (e.g. @windows,macos)
 # cli_name is optional and defaults to package name (e.g. neovim(nvim), ripgrep(rg))
 # Aliases: | separates optional per-manager name overrides (e.g. fd | apt:fd-find)
 
@@ -22,20 +23,19 @@ lsd
 starship
 
 # -- terminal / GUI --
-alacritty @windows
-wezterm @windows
-zed @windows
+alacritty
+wezterm
+zed
+nushell
 neovide @windows
-nushell @windows
-tmux @windows
-zellij @windows
+tmux @macos,linux
 
 # -- language toolchains --
-nvm @windows
-uv @windows
+nvm
+uv
 
 # -- crypto --
-openssl @windows
+openssl
 
 ## optional (uncomment to enable)
 # tree
