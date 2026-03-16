@@ -1,6 +1,6 @@
 # Tmux - Modular Configuration
 
-Lightweight tmux configuration for Unix-like environments, with a WezTerm-inspired key layout.
+Lightweight tmux configuration for Unix-like environments, with a minimal direct-navigation layer on top of tmux defaults.
 
 ## Prerequisites
 - tmux
@@ -8,47 +8,30 @@ Lightweight tmux configuration for Unix-like environments, with a WezTerm-inspir
 
 ## Load Behavior
 - Main entrypoint: `~/.tmux.conf`
-- Modules: `~/.tmux.d/*.conf` loaded in numeric order
-- Helper scripts: `~/.tmux.d/bin/*`
+- Modules are sourced in this order: `00-options.conf`, `90-plugins.conf`, `10-keybindings.conf`, `20-status.conf`
 - Plugin manager: TPM (`~/.tmux/plugins/tpm`)
 
 ## Module Layout
 - `00-options.conf`: terminal, history, mouse, indexing, clipboard, activity monitoring
-- `10-keybindings.conf`: root bindings, leader, direct navigation, copy/scroll helpers
-- `11-keytables.conf`: WezTerm-style `window`, `pane`, `session` groups
+- `10-keybindings.conf`: tmux-default prefix plus direct pane/window/session bindings
 - `20-status.conf`: WezTerm-inspired status line with key table, session, and window-state blocks
 - `90-plugins.conf`: TPM and plugin declarations
 
 ## Navigation Model
-- WezTerm `tab` maps to tmux `window`
-- WezTerm `pane` maps to tmux `pane`
-- WezTerm `domain/workspace` maps to tmux `session`
-- Tmux prefix is `Alt+\`
-
-## Key Groups
-- `prefix + t`: window group
-- `prefix + p`: pane group
-- `prefix + s`: session group
+- Tmux prefix remains the default `C-b`
+- `prefix + r`: reload `~/.tmux.conf`
+- `prefix + w`: view windows/tree
+- `prefix + s`: view sessions
 
 ## Direct Keys
 - `Alt+h/j/k/l`: move between panes
 - `Alt+,` / `Alt+.`: previous / next window
-- `Alt+Enter`: zoom pane
-- `Alt+w`: kill pane
-- `Alt+u` / `Alt+d`: scroll tmux history
-- `Alt+f`: search tmux scrollback
-- `F2`: enter copy-mode
-- `F3`: open tree chooser
-- `F4`: open window chooser
-- `F5` / `F6`: open session chooser
-
-## Session Workflow
-- `prefix + s n`: create or reuse a session based on the current pane directory
-- Session names are derived from the current directory basename and sanitized for tmux
-- The helper script lives at `~/.tmux.d/bin/session-from-path.sh`
+- `Alt+{` / `Alt+}`: previous / next session
+- `Alt+t`: create a new window in the current pane path
+- `Alt+w`: kill the current window
 
 ## Status Line
-- Left status uses orange icon blocks for `LEADER` and active key tables
+- Left status uses orange icon blocks for `LEADER` and any active non-root key table
 - Window blocks are left-justified so they grow from left to right like a tab strip
 - Active windows use a green block; inactive windows use a dark gray block
 - Right status uses a compact orange session block only

@@ -11,4 +11,3 @@
 [tmux.files]
 "packages/tmux/.tmux.conf" = "~/.tmux.conf"
 "packages/tmux/conf.d" = "~/.tmux.d"
-"packages/tmux/scripts" = "~/.tmux.d/bin"
