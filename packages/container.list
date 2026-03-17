@@ -11,3 +11,4 @@ fd | apt:fd-find dnf:fd-find
 fzf
 jq
 neovim(nvim)
+tmux

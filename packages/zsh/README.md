@@ -1,10 +1,10 @@
 # Zsh Profile - Modular Configuration
 
-Modular zsh profile with Git and Docker utilities.
+Modular zsh profile with Git, Docker, and tmux helpers.
 
 ## Prerequisites
 - zsh, Starship (optional, auto-enabled when available)
-- Git, Docker (optional - related module auto-disables if missing)
+- Git, Docker, tmux (optional - related module auto-disables if missing)
 - fzf (optional - only required for `gitwts` and `dockerf*` interactive commands)
 
 ## Load Behavior
@@ -36,6 +36,11 @@ Modular zsh profile with Git and Docker utilities.
 | `dockerfrun` | Run container from image (`fzf`) |
 | `dockerfexec` | Execute command in container (`fzf`) |
 
+### Tmux Module (requires: `tmux`)
+| Command | Description |
+|---------|-------------|
+| `tmux` | Wrapped as `tmux -u` to force UTF-8 output mode for tmux servers started from zsh |
+
 ## fzf Missing Behavior
 - Matches PowerShell profile behavior.
 - If `fzf` is not available, interactive commands are skipped with a clear message.
@@ -46,6 +51,11 @@ Modular zsh profile with Git and Docker utilities.
 - Regeneration policy: regenerate when missing or older than 30 days
 - Failure behavior: silently skip completion generation (profile load continues)
 
+## Tmux UTF-8 Behavior
+- The tmux module wraps `tmux` as `tmux -u` from zsh.
+- This prevents tmux from starting in non-UTF-8 output mode, which would otherwise replace Nerd Font and prompt icons with `_`.
+- Existing tmux servers keep their original mode; after enabling this module, restart tmux with `tmux kill-server`.
+
 ## Testing
 
 ```zsh
@@ -53,6 +63,7 @@ Modular zsh profile with Git and Docker utilities.
 zsh -n packages/zsh/.zshrc
 zsh -n packages/zsh/conf.d/05-utils.zsh
 zsh -n packages/zsh/conf.d/10-git.zsh
+zsh -n packages/zsh/conf.d/15-tmux.zsh
 zsh -n packages/zsh/conf.d/20-docker.zsh
 
 # Diagnostics

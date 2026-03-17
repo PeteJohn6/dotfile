@@ -20,15 +20,17 @@ delta | apt:git-delta dnf:git-delta pacman:git-delta brew:git-delta
 zoxide
 eza
 lsd
-starship
 
 # -- terminal / GUI --
 alacritty
 wezterm
-zed
-nushell
-neovide @windows
+starship
 tmux @macos,linux
+nushell
+
+# editor
+zed
+neovide @windows
 
 # -- language toolchains --
 nvm

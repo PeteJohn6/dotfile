@@ -27,7 +27,7 @@ Install dependencies (just, dotter, package managers):
 Bootstrap automatically creates `.dotter/local.toml` based on your platform.
 To customize packages, edit `.dotter/local.toml`:
 ```toml
-packages = ["git", "nvim"]  # Add or remove packages
+packages = ["git", "nvim", "tmux"]  # Add or remove packages
 ```
 
 ### 3. Deploy
@@ -59,6 +59,7 @@ just uninstall
 |---------|-------------|-----------|
 | git     | Git configuration, global gitignore, and gitattributes | Linux, macOS, Windows |
 | nvim    | Neovim editor configuration | Linux, macOS, Windows |
+| tmux    | Tmux configuration with modular `~/.tmux.d` layout and TPM bootstrap | Linux, macOS, WSL |
 
 ## Architecture
 
@@ -110,6 +111,7 @@ just uninstall
     ├── post/                # Per-tool post-install scripts
     ├── git/                 # Git configuration
     ├── nvim/                # Neovim configuration
+    ├── tmux/                # Tmux configuration
     └── ...                  # Other packages
 ```
 
