@@ -112,7 +112,7 @@ try {
 }
 
 # Check for expected functions
-$expectedFunctions = @('gitwt', 'gitwts', 'gits', 'gitl')
+$expectedFunctions = @('gitwt', 'gitwts', 'gitwtr', 'gitco', 'gits', 'gitl')
 if ($available['docker']) {
     $expectedFunctions += @(
         'dockerfshell',

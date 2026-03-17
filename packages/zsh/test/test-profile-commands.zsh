@@ -86,7 +86,7 @@ else
   print "  [ERROR] Main profile not found at: $PROFILE_PATH"
 fi
 
-typeset -a expected_functions=(gitwt gitwts gits gitl)
+typeset -a expected_functions=(gitwt gitwts gitwtr gitco gits gitl)
 if [[ "${available[docker]:-0}" == "1" ]]; then
   expected_functions+=(
     dockerfshell
