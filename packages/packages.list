@@ -1,7 +1,8 @@
 # packages.list
-# Format: package[(cli_name)] [@platform] [| manager:name ...]
-# Supported platforms: unix (Linux+macOS), windows
-# No tag = all platforms
+# Format: package[(cli_name)] [@platform[,platform...]] [| manager:name ...]
+# Supported platforms: windows, macos, linux
+# No selector = all platforms
+# Multi-platform selectors use a single token with no spaces (e.g. @windows,macos)
 # cli_name is optional and defaults to package name (e.g. neovim(nvim), ripgrep(rg))
 # Aliases: | separates optional per-manager name overrides (e.g. fd | apt:fd-find)
 
@@ -19,23 +20,24 @@ delta | apt:git-delta dnf:git-delta pacman:git-delta brew:git-delta
 zoxide
 eza
 lsd
-starship
-tmux @unix
 
 # -- terminal / GUI --
-alacritty @windows
-wezterm @windows
-zed @windows
+alacritty
+wezterm
+starship
+tmux @macos,linux
+nushell
+
+# editor
+zed
 neovide @windows
-nushell @windows
-zellij @windows
 
 # -- language toolchains --
-nvm @windows
-uv @windows
+nvm
+uv
 
 # -- crypto --
-openssl @windows
+openssl
 
 ## optional (uncomment to enable)
 # tree

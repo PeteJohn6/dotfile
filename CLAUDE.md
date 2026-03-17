@@ -71,7 +71,7 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 |   |-- post.sh              # Unix post orchestrator
 |   `-- post.ps1             # Windows post orchestrator
 |-- packages/
-|   |-- packages.list         # desktop package list (supports @platform tags)
+|   |-- packages.list         # desktop package list (supports comma-separated @platform tags)
 |   |-- container.list        # minimal container package list
 |   |-- pre-install-unix.sh   # pre-install rules for Unix packages
 |   |-- post/                # per-package post-install scripts (named by CLI command)
@@ -135,7 +135,7 @@ just uninstall   # dotter undeploy --verbose
 
 ## Requirements for Package Configuration
 
-1. Add the package to `packages/packages.list` (desktop) or `packages/container.list` (container). For the desktop list, you can use optional `@platform` tags.
+1. Add the package to `packages/packages.list` (desktop) or `packages/container.list` (container). For the desktop list, you can use optional comma-separated `@platform` tags.
 
 2. If the package requires pre-install setup, add a rule to `packages/pre-install-unix.sh` (if applicable).
 
