@@ -266,6 +266,6 @@ gitwtr() {
       ;;
   esac
 
-  git worktree remove "$selected_path" || return $?
+  git worktree remove -- "$selected_path" || return $?
   print -- "gitwtr: removed $selected_path"
 }

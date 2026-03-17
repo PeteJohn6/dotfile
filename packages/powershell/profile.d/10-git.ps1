@@ -297,7 +297,7 @@ gitwtr
     return
   }
 
-  git worktree remove $path
+  git worktree remove -- $path
   if ($LASTEXITCODE -ne 0) { return }
 
   Write-Host "gitwtr: removed $path" -ForegroundColor Green
