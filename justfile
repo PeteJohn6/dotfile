@@ -40,7 +40,7 @@ dry:
 [windows]
 dry:
     @echo "==> Running dotter dry-run (preview mode)..."
-    @pwsh -NoProfile -Command "dotter.exe deploy --dry-run; if ($LASTEXITCODE -ne 0) { Write-Host '==> Some files would be skipped. Use just stow-force to overwrite.' }"
+    @pwsh -NoProfile -Command "dotter.exe deploy --dry-run; if (\$LASTEXITCODE -ne 0) { Write-Host '==> Some files would be skipped. Use just stow-force to overwrite.' }"
     @echo "==> Dry-run complete."
 
 # Stow - deploy dotfiles via dotter (create symbolic links)
@@ -53,7 +53,7 @@ stow:
 [windows]
 stow:
     @echo "==> Deploying dotfiles via dotter..."
-    @pwsh -NoProfile -Command "dotter.exe deploy --verbose; if ($LASTEXITCODE -ne 0) { Write-Host '==> Some files were skipped (already exist). Use just stow-force to overwrite.' }"
+    @pwsh -NoProfile -Command "dotter.exe deploy --verbose; if (\$LASTEXITCODE -ne 0) { Write-Host '==> Some files were skipped (already exist). Use just stow-force to overwrite.' }"
     @echo "==> Dotfiles deployed"
 
 # Force stow - deploy dotfiles, overwriting conflicts
