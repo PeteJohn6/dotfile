@@ -8,6 +8,5 @@
 "packages/nvim" = "~/AppData/Local/nvim"
 
 [powershell.files]
-"packages/powershell/Microsoft.PowerShell_profile.ps1" = "~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1"
-"packages/powershell/profile.d" = "~/Documents/WindowsPowerShell/profile.d"
-
+"packages/powershell/Microsoft.PowerShell_profile.ps1" = "~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1"
+"packages/powershell/profile.d" = "~/Documents/PowerShell/profile.d"
