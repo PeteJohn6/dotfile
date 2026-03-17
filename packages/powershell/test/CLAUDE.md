@@ -10,7 +10,7 @@ This guide provides detailed instructions for verifying and debugging the modula
 | **Enable debug output** | `$env:PROFILE_DEBUG=1; pwsh -NoProfile -NoExit -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'"` |
 | **Run diagnostic script** | `pwsh -NoProfile -Command "& '$PWD\test\test-profile-commands.ps1'"` |
 | **Verify module exports** | `pwsh -NoProfile -Command ". '$PWD\profile.d\05-utils.ps1'; . '$PWD\profile.d\XX-modulename.ps1'; Get-Command -CommandType Function \| Where-Object Source -eq '' \| Format-Table Name"` |
-| **Check specific commands** | `Get-Command gitwt,dockerfexec,gits -ErrorAction SilentlyContinue \| Format-Table Name,CommandType` |
+| **Check specific commands** | `Get-Command gitco,gitwt,gitwtr,dockerfexec,gits -ErrorAction SilentlyContinue \| Format-Table Name,CommandType` |
 | **Disable debug mode** | `Remove-Item env:PROFILE_DEBUG` |
 
 
@@ -42,13 +42,13 @@ After loading or modifying the profile, verify that commands are properly define
 ### Quick Verification
 Check if specific commands exist:
 ```powershell
-Get-Command gitwt,gitwts,dockerfexec,dockerfshell,gits,dockerps,dockercompose -ErrorAction SilentlyContinue | Format-Table Name,CommandType
+Get-Command gitco,gitwt,gitwts,gitwtr,dockerfexec,dockerfshell,gits,dockerps,dockercompose -ErrorAction SilentlyContinue | Format-Table Name,CommandType
 ```
 
 ### Comprehensive Test
 Load profile and verify all commands in one step:
 ```powershell
-pwsh -NoProfile -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'; Get-Command gitwt,gitwts,dockerfexec,dockerfshell,gits,dockerps,dockercompose -ErrorAction SilentlyContinue | Format-Table Name,CommandType"
+pwsh -NoProfile -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'; Get-Command gitco,gitwt,gitwts,gitwtr,dockerfexec,dockerfshell,gits,dockerps,dockercompose -ErrorAction SilentlyContinue | Format-Table Name,CommandType"
 ```
 
 ### Using Diagnostic Script
@@ -101,7 +101,7 @@ This will check:
 
 4. **Test Individual Module**
    ```powershell
-   pwsh -NoProfile -Command ". '$PWD\profile.d\10-git.ps1'; Get-Command gitwt,gits -ErrorAction SilentlyContinue"
+   pwsh -NoProfile -Command ". '$PWD\profile.d\10-git.ps1'; Get-Command gitco,gitwt,gitwtr,gits -ErrorAction SilentlyContinue"
    ```
 
 5. **Check Profile Path Resolution**

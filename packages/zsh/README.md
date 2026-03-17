@@ -5,7 +5,7 @@ Modular zsh profile with Git, Docker, and tmux helpers.
 ## Prerequisites
 - zsh, Starship (optional, auto-enabled when available)
 - Git, Docker, tmux (optional - related module auto-disables if missing)
-- fzf (optional - only required for `gitwts` and `dockerf*` interactive commands)
+- fzf (optional - only required for `gitco`, `gitwts`, `gitwtr`, and `dockerf*` interactive commands)
 
 ## Load Behavior
 - Main entrypoint: `.zshrc`
@@ -14,17 +14,18 @@ Modular zsh profile with Git, Docker, and tmux helpers.
 
 ## Commands
 
-### Git Module (requires: `git`; `fzf` only for `gitwts`)
+### Git Module (requires: `git`; `fzf` only for `gitco`, `gitwts`, and `gitwtr`)
 | Command | Description |
 |---------|-------------|
 | `gits` | `git status` |
 | `gitl` | `git log --oneline --decorate --graph` |
-| `gitco` | `git checkout` |
+| `gitco` | `git checkout`; interactive branch selector when called without args (`fzf`) |
 | `gitcm` | `git commit` |
 | `gitp` | `git push` |
 | `gitpl` | `git pull` |
 | `gitwt` | `git worktree` |
 | `gitwts` | Interactive worktree selector (`fzf`) |
+| `gitwtr` | Interactive worktree remover (`fzf`, confirmation required) |
 
 ### Docker Module (requires: `docker`; `fzf` for all `dockerf*`)
 | Command | Description |
