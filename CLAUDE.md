@@ -110,6 +110,8 @@ See `script/CLAUDE.md` for detailed install and post-installation notes.
 ### Dotter
 
 - See `.dotter/CLAUDE.md` for detailed `dotter` notes
+- `dotter deploy` is a reconciliation step, not append-only. Dotter tracks deployed targets in `.dotter/cache.toml`, updates changed targets, and removes cached targets that are no longer declared by the current config.
+- Routine redeploys should use `just stow` directly. `dotter undeploy` / `just uninstall` is for full removal or reset workflows, not a required pre-step before normal deploys.
 
 ## Final Goal
 

@@ -46,6 +46,8 @@ just stow        # Deploy dotfiles (create symlinks)
 just post        # Run post-installation scripts
 ```
 
+`just stow` / `dotter deploy` is safe to re-run. Dotter tracks deployed targets in `.dotter/cache.toml` and reconciles that cache with the current configuration: it updates changed targets and removes cached targets that are no longer desired. Routine redeploys should not run `just uninstall` first.
+
 ### 4. Uninstall
 
 Remove deployed dotfiles:
