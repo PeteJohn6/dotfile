@@ -26,7 +26,7 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
     - macOS:
         - homebrew
 
-### Workflow
+### User Workflow
 
 1. **Bootstrap**
     - Linux/macOS: `bootstrap/bootstrap.sh` (auto-detects platform at runtime)
@@ -59,24 +59,27 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 ### Folder Layout
 
 ```
-|-- justfile                 # install/stow/post orchestration
-|-- .dotter/                 # dotter profiles
-|-- bootstrap/
+|-- justfile                  # install/stow/post orchestration
+|-- .dotter/                  # dotter profiles
+|-- bootstrap/                # bootstrap scripts for each platform
 |   |-- bootstrap.sh          # Linux/macOS dependency bootstrap
 |   `-- bootstrap.ps1         # Windows dependency bootstrap
 |-- script/
-|   |-- install.sh           # Linux/macOS install script
-|   |-- misc.sh             # Unix shared runtime/privilege helpers
-|   |-- install.ps1          # Windows install script
-|   |-- post.sh              # Unix post orchestrator
-|   `-- post.ps1             # Windows post orchestrator
+|   |-- install.sh            # Linux/macOS install script
+|   |-- misc.sh               # Unix shared runtime/privilege helpers
+|   |-- install.ps1           # Windows install script
+|   |-- post.sh               # Unix post orchestrator
+|   `-- post.ps1              # Windows post orchestrator
 |-- packages/
 |   |-- packages.list         # desktop package list (supports comma-separated @platform tags)
 |   |-- container.list        # minimal container package list
 |   |-- pre-install-unix.sh   # pre-install rules for Unix packages
-|   |-- post/                # per-package post-install scripts (named by CLI command)
+|   |-- post/                 # per-package post-install scripts (named by CLI command)
 |   `-- [package_name]/       # per-package configuration
-|-- README.md                # overview and usage for users
+|-- README.md                 # overview and usage for users
+|-- test                      # testing-related files
+|   |-- devcontainer          # devcontainer environment for testing
+
 ```
 
 ## Implementation Guidelines for Infrastructure
@@ -113,7 +116,7 @@ See `script/CLAUDE.md` for detailed install and post-installation notes.
 - `dotter deploy` is a reconciliation step, not append-only. Dotter tracks deployed targets in `.dotter/cache.toml`, updates changed targets, and removes cached targets that are no longer declared by the current config.
 - Routine redeploys should use `just stow` directly. `dotter undeploy` / `just uninstall` is for full removal or reset workflows, not a required pre-step before normal deploys.
 
-## Final Goal
+### Final Goal
 
 1. `just` provides:
 
@@ -135,7 +138,7 @@ just uninstall   # dotter undeploy --verbose
 
 2. Each `just` step must be idempotent.
 
-## Requirements for Package Configuration
+### Requirements for Package Configuration
 
 1. Add the package to `packages/packages.list` (desktop) or `packages/container.list` (container). For the desktop list, you can use optional comma-separated `@platform` tags.
 
@@ -147,4 +150,8 @@ just uninstall   # dotter undeploy --verbose
 
 4. If the package requires post-install configuration, add a script to `packages/post/` (named appropriately).
 
-5. Keep maintained packages and the README in sync.
+5. Keep maintained packages and the README in sync. After each change, review and update README.md promptly to ensure it accurately reflects the current state of the repository.
+
+## Test
+
+1. After each change, For Windows platform changes, perform static checks only; no testing is required. For Unix changes, use the `devcontainer-for-testing` skill for testing. If changes affect both platforms, test only the Unix platform.

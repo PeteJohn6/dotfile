@@ -1,16 +1,21 @@
 # Dotfiles
 
-Cross-platform dotfiles management system using a "bootstrap + justfile + dotter" architecture.
+Cross-platform dotfiles repository built around `bootstrap`, `just`, and `dotter`.
 
 ## Overview
 
-This repository manages configuration files across Linux, macOS, and Windows through a declarative, profile-based workflow.
+This repository separates two concerns:
+
+- Software installation is driven by `packages/packages.list` for host machines and `packages/container.list` for container environments.
+- Dotfile deployment is driven by `.dotter/global.toml`, `.dotter/unix.toml`, `.dotter/windows.toml`, and your local `.dotter/local.toml`.
+
+The default workflow is still `bootstrap -> install -> stow -> post`, with `just` orchestrating the install and deploy steps.
 
 ## Quick Start
 
 ### 1. Bootstrap
 
-Install dependencies (just, dotter, package managers):
+Bootstrap prepares the repo for your platform, installs `just`, fetches `dotter`, and copies a platform-appropriate `.dotter/local.toml` template if one does not already exist.
 
 **Linux/macOS:**
 ```bash
@@ -22,117 +27,152 @@ Install dependencies (just, dotter, package managers):
 .\bootstrap\bootstrap.ps1
 ```
 
-### 2. Configure (Automatic)
+### 2. Configure
 
-Bootstrap automatically creates `.dotter/local.toml` based on your platform.
-To customize packages, edit `.dotter/local.toml`:
+Bootstrap creates `.dotter/local.toml` from `.dotter/default/unix.toml`, `.dotter/default/windows.toml`, or `.dotter/default/container.toml`.
+
+Edit `.dotter/local.toml` to choose which maintained config packages are deployed:
+
 ```toml
-packages = ["git", "nvim", "tmux"]  # Add or remove packages
+includes = [".dotter/unix.toml"]
+packages = ["git", "nvim", "zsh", "starship", "tmux"]
 ```
 
-### 3. Deploy
+Windows defaults to:
 
-**All-in-one deployment:**
+```toml
+includes = [".dotter/windows.toml"]
+packages = ["git", "nvim", "starship", "powershell"]
+```
+
+### 3. Install and Deploy
+
+**All-in-one setup:**
 ```bash
-just up          # install -> stow -> post
+just up
 ```
 
 **Step-by-step:**
 ```bash
-just install     # Install packages from lists
-just install-force  # Unix: install with strict pre-install checks
-just dry         # Preview dotfile deployment
-just stow        # Deploy dotfiles (create symlinks)
-just post        # Run post-installation scripts
+just install        # Install software from packages/*.list
+just install-force  # Strict install mode on Unix; same as install on Windows
+just dry            # Preview dotter deployment
+just stow           # Deploy dotfiles
+just stow-force     # Deploy dotfiles and overwrite conflicts
+just post           # Run post-install scripts from packages/post/
 ```
 
-`just stow` / `dotter deploy` is safe to re-run. Dotter tracks deployed targets in `.dotter/cache.toml` and reconciles that cache with the current configuration: it updates changed targets and removes cached targets that are no longer desired. Routine redeploys should not run `just uninstall` first.
+`just stow` is safe to re-run. Dotter reconciles deployed targets using `.dotter/cache.toml`, so normal redeploys should not require `just uninstall` first.
 
-### 4. Uninstall
+### 4. Remove Deployed Dotfiles
 
-Remove deployed dotfiles:
 ```bash
 just uninstall
 ```
 
-## Managed Packages
+## Maintained Config Packages
+
+These are the config packages currently maintained in this repository and referenced by `.dotter/*.toml`:
 
 | Package | Description | Platforms |
 |---------|-------------|-----------|
-| git     | Git configuration, global gitignore, and gitattributes | Linux, macOS, Windows |
-| nvim    | Neovim editor configuration | Linux, macOS, Windows |
-| tmux    | Tmux configuration with modular `~/.tmux.d` layout and TPM bootstrap | Linux, macOS, WSL |
+| `git` | Git config, global ignore rules, and gitattributes | Linux, macOS, Windows |
+| `nvim` | Neovim configuration | Linux, macOS, Windows |
+| `zsh` | Modular zsh profile and helper modules | Linux, macOS |
+| `starship` | Shared Starship prompt symbols/config | Linux, macOS, Windows |
+| `tmux` | Modular tmux config with TPM bootstrap in post-install | Linux, macOS |
+| `powershell` | Modular PowerShell profile and helper modules | Windows |
+
+## Software Install Lists
+
+The package lists under `packages/` are broader than the maintained config packages above:
+
+- `packages/packages.list` is the host-machine install list. It currently includes CLI tools, terminals, shells, editors, and language tooling such as `git`, `neovim`, `ripgrep`, `fd`, `fzf`, `jq`, `yq`, `wezterm`, `starship`, `nushell`, `zed`, `nvm`, and `uv`.
+- `packages/container.list` is the smaller container-oriented install list used when `install.sh` detects a container runtime.
+
+In other words: `packages/*.list` decides what software gets installed, while `.dotter/local.toml` decides which repo-managed configs get deployed.
 
 ## Architecture
 
 ### Tools
 
-- **just**: Task orchestrator for install/stow/post workflow
-- **dotter**: Dotfiles manager with symbolic links and templating
+- **`just`**: task runner for `install`, `stow`, `post`, and combined workflows
+- **`dotter`**: dotfile manager used for deployment and undeployment
 - **Platform package managers**:
-  - Windows: scoop (user-mode), winget/chocolatey (system-level)
-  - macOS: homebrew
-  - Linux: apt/dnf/pacman
+  - Windows: Scoop is the package-manager path implemented by `script/install.ps1`
+  - macOS: Homebrew
+  - Linux: `apt`, `dnf`, or `pacman`
+- **Unix pre-install hooks**: `packages/pre-install-unix.sh` can install newer binaries before package-manager fallback when needed
 
 ### Workflow
 
-```
-1. Bootstrap → Install just, dotter, package managers
-2. Install   → Run pre-install (repo prep + index update), then install packages from packages/packages.list (or container.list in containers)
-3. Stow      → Deploy dotfiles via dotter (symbolic links)
-4. Post      → Run post-installation scripts
+```text
+1. Bootstrap -> install just, fetch dotter, seed .dotter/local.toml
+2. Install   -> parse packages/packages.list or packages/container.list
+3. Stow      -> deploy selected config packages via dotter
+4. Post      -> run scripts from packages/post/ after links are in place
 ```
 
 ### Directory Structure
 
-```
-├── justfile                 # Task orchestration
+```text
+├── justfile
 ├── .dotter/
-│   ├── global.toml          # Base package definitions
-│   ├── windows.toml         # Windows-specific overrides
-│   ├── unix.toml            # Unix-specific overrides
-│   ├── default/             # Default local.toml templates
-│   │   ├── windows.toml     # Windows template
-│   │   ├── unix.toml        # Unix template
-│   │   └── container.toml   # Container template
-│   ├── local.toml           # User configuration (auto-created by bootstrap, gitignored)
-│   └── CLAUDE.md            # Dotter implementation guide
+│   ├── global.toml
+│   ├── unix.toml
+│   ├── windows.toml
+│   ├── default/
+│   │   ├── unix.toml
+│   │   ├── windows.toml
+│   │   └── container.toml
+│   └── CLAUDE.md
 ├── bootstrap/
-│   ├── bootstrap.sh         # Linux/macOS bootstrap
-│   └── bootstrap.ps1        # Windows bootstrap
+│   ├── bootstrap.sh
+│   ├── bootstrap.ps1
+│   └── CLAUDE.md
 ├── script/
-│   ├── install.sh           # Linux/macOS install script
-│   ├── misc.sh              # Unix shared runtime/privilege helpers
-│   ├── install.ps1          # Windows install script
-│   ├── post.sh              # Unix post orchestrator
-│   └── post.ps1             # Windows post orchestrator
-└── packages/
-    ├── pre-install-unix.sh  # Unix pre-install rule library
-    ├── packages.list        # Unified package list (with comma-separated @platform tags)
-    ├── container.list       # Minimal package list for containers
-    ├── post/                # Per-tool post-install scripts
-    ├── git/                 # Git configuration
-    ├── nvim/                # Neovim configuration
-    ├── tmux/                # Tmux configuration
-    └── ...                  # Other packages
+│   ├── install.sh
+│   ├── install.ps1
+│   ├── misc.sh
+│   ├── post.sh
+│   ├── post.ps1
+│   └── CLAUDE.md
+├── packages/
+│   ├── packages.list
+│   ├── container.list
+│   ├── pre-install-unix.sh
+│   ├── post/
+│   ├── git/
+│   ├── nvim/
+│   ├── powershell/
+│   ├── starship/
+│   ├── tmux/
+│   └── zsh/
+├── test/
+│   └── devcontainer/
+└── README.md
 ```
 
 ## Design Principles
 
-1. **Idempotency**: All scripts can be run multiple times safely
-2. **Platform Detection**: Scripts auto-detect the platform
-3. **Error Handling**: Fail fast with clear error messages
+1. **Idempotency**: bootstrap, install, deploy, and post steps should be safe to rerun.
+2. **Platform awareness**: scripts detect platform and container context before acting.
+3. **Separation of concerns**: install lists decide software; dotter profiles decide deployed config.
 
 ## Force Mode
 
-- `just install-force`: runs install with strict pre-install checks (Unix)
-- `just up-force`: runs `install-force -> stow-force -> post`
+- `just install-force`: strict install mode on Unix
+- `just stow-force`: deploy while overwriting conflicts
+- `just up-force`: run `install-force -> stow-force -> post`
 
 ## Documentation
 
-- `.dotter/CLAUDE.md` - Dotter configuration guide
-- `script/CLAUDE.md` - Install and post-installation guide
-- `bootstrap/CLAUDE.md` - Bootstrap script guide
+- `.dotter/CLAUDE.md` - dotter configuration guide
+- `bootstrap/CLAUDE.md` - bootstrap implementation notes
+- `script/CLAUDE.md` - install and post orchestration notes
+- `packages/zsh/README.md` - zsh profile details
+- `packages/powershell/README.md` - PowerShell profile details
+- `packages/tmux/README.md` - tmux configuration details
 
 ## License
 
