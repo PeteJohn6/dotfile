@@ -1,13 +1,13 @@
 ---
 name: devcontainer-for-testing
-description: When testing is needed, use devcontainer to create a disposable container-based test environment. Run setup, debugging, and test commands inside `/workspace` in the container rather than on the host.
+description: When Unix-side debugging or testing is needed, use devcontainer to create a disposable container-based test environment. Run setup, debugging, and test commands inside `/workspace` in the container rather than on the host.
 ---
 
 # Devcontainer for Testing
 
 ## Overview
 
-When testing is needed, use the repository's test devcontainer defined at `test/devcontainer/devcontainer.json` as the default disposable environment. Manage its lifecycle through the devcontainer CLI rather than using ad hoc Docker commands. The container's `/workspace` contains the full source code. Operations inside `/workspace` do not need to worry about polluting the source code, so dependency installation, builds, debugging, and tests should all happen there unless the task explicitly targets the host.
+When Unix-side debugging or testing is needed, use the repository's test devcontainer defined at `test/devcontainer/devcontainer.json` as the default disposable environment. Manage its lifecycle through the devcontainer CLI rather than using ad hoc Docker commands. The container's `/workspace` contains the full source code. Operations inside `/workspace` do not need to worry about polluting the source code, so dependency installation, builds, debugging, and tests should all happen there unless the task explicitly targets the host.
 
 ## Workflow
 
