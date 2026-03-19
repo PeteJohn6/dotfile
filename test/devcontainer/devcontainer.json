@@ -1,0 +1,21 @@
+{
+  "name": "dotfile-test-env",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/repo-ro,readonly",
+  "workspaceFolder": "/workspace",
+  "runArgs": [
+    "--label",
+    "infra-test-skill.test=true",
+    "--label",
+    "infra-test-skill.config=test/devcontainer/devcontainer.json"
+  ],
+  "onCreateCommand": "bash /repo-ro/test/devcontainer/init-workspace.sh",
+  "remoteUser": "root",
+  "overrideCommand": true,
+  "containerEnv": {
+    "DEBIAN_FRONTEND": "noninteractive"
+  }
+}
