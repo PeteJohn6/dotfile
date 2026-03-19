@@ -1,5 +1,7 @@
 .tree
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/skills/**
 
 # Dotter local configuration (machine-specific)
 .dotter/local.toml
