@@ -152,6 +152,8 @@ just uninstall   # dotter undeploy --verbose
 
 5. Keep maintained packages and the README in sync. After each change, review and update README.md promptly to ensure it accurately reflects the current state of the repository.
 
-## Test
+## Debugging and Testing
 
-1. After each change, For Windows platform changes, perform static checks only; no testing is required. For Unix changes, use the `devcontainer-for-testing` skill for testing. If changes affect both platforms, test only the Unix platform.
+1. During development, if Unix-side debugging is needed, use the `devcontainer-for-testing` skill in a disposable environment.
+
+2. After completing the overall change, validate the full workflow in a fresh disposable container environment. For Windows-only changes, perform static checks only; no runtime testing is required. For Unix-only changes, use the `devcontainer-for-testing` skill for testing. If changes affect both platforms, test only the Unix side.
