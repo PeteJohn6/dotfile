@@ -1,3 +1,8 @@
 # Windows local configuration (auto-copied by bootstrap)
 includes = [".dotter/windows.toml"]
 packages = ["git", "nvim", "starship", "powershell", "alacritty"]
+
+[variables]
+# Optional: set an absolute startup directory for Alacritty.
+# Leave as "None" to inherit the current working directory.
+# alacritty_working_directory = "C:/Users/your-user"

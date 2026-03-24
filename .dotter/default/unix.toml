@@ -1,3 +1,8 @@
 # Unix local configuration (auto-copied by bootstrap)
 includes = [".dotter/unix.toml"]
 packages = ["git", "nvim", "zsh", "starship", "tmux", "alacritty"]
+
+[variables]
+# Optional: set an absolute startup directory for Alacritty.
+# Leave as "None" to inherit the current working directory.
+# alacritty_working_directory = "/home/your-user"

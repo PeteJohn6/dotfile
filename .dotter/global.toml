@@ -1,8 +1,6 @@
 # Dotter global configuration
 # See: https://github.com/SuperCuber/dotter/wiki
 
-[helpers]
-
 [settings]
 default_target_type = "symbolic"
 
@@ -26,3 +24,6 @@ depends = []
 
 [alacritty]
 depends = []
+
+[alacritty.variables]
+alacritty_working_directory = "None"

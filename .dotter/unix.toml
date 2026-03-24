@@ -5,7 +5,8 @@
 "packages/nvim" = "~/.config/nvim"
 
 [alacritty.files]
-"packages/alacritty" = "~/.config/alacritty"
+"packages/alacritty/alacritty.toml.tmpl" = { type = "template", target = "~/.config/alacritty/alacritty.toml" }
+"packages/alacritty/themes" = { type = "symbolic", target = "~/.config/alacritty/themes" }
 
 [zsh.files]
 "packages/zsh/.zshrc" = "~/.zshrc"
