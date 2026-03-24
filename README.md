@@ -59,6 +59,7 @@ just uninstall
 |---------|-------------|-----------|
 | git     | Git configuration, global gitignore, and gitattributes | Linux, macOS, Windows |
 | nvim    | Neovim editor configuration | Linux, macOS, Windows |
+| alacritty | Single-entry Alacritty configuration deployed to the platform Alacritty config directory | Linux, macOS, Windows |
 
 ## Architecture
 

@@ -22,7 +22,7 @@ lsd
 starship
 
 # -- terminal / GUI --
-alacritty @windows
+alacritty
 wezterm @windows
 zed @windows
 neovide @windows

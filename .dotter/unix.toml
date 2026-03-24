@@ -4,6 +4,9 @@
 [nvim.files]
 "packages/nvim" = "~/.config/nvim"
 
+[alacritty.files]
+"packages/alacritty" = "~/.config/alacritty"
+
 [zsh.files]
 "packages/zsh/.zshrc" = "~/.zshrc"
 "packages/zsh/conf.d" = "~/.config/zsh/conf.d"

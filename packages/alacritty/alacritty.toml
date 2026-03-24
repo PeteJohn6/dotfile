@@ -1,0 +1,39 @@
+[general]
+import = ["./themes/cyberdream.toml"]
+working_directory = "~"
+
+[window]
+decorations = "Full"
+opacity = 0.9
+startup_mode = "Windowed"
+dynamic_title = false
+
+[font]
+normal = { family = "SauceCodePro Nerd Font" }
+italic = { family = "SauceCodePro Nerd Font Mono", style = "Italic" }
+bold = { family = "SauceCodePro Nerd Font", style = "Bold" }
+bold_italic = { family = "SauceCodePro Nerd Font", style = "Bold Italic" }
+size = 13
+
+[scrolling]
+history = 100000
+
+[mouse]
+hide_when_typing = true
+bindings = [
+    { mouse = "Right", action = "Paste" },
+    { mouse = "Middle", action = "ExpandSelection" },
+    { mouse = "Forward", action = "Copy" },
+]
+
+[selection]
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+save_to_clipboard = false
+
+[keyboard]
+bindings = [
+    { key = "F11", action = "ToggleFullscreen" },
+    { key = "C", mods = "Alt", action = "Copy" },
+    { key = "V", mods = "Alt", action = "Paste" },
+    { key = "N", mods = "Control", action = "CreateNewWindow" },
+]

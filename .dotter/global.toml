@@ -23,3 +23,6 @@ depends = []
 
 [starship.files]
 "packages/starship/nerd-font-symbols.toml" = "~/.config/starship.toml"
+
+[alacritty]
+depends = []

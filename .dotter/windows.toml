@@ -11,3 +11,5 @@
 "packages/powershell/Microsoft.PowerShell_profile.ps1" = "~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1"
 "packages/powershell/profile.d" = "~/Documents/WindowsPowerShell/profile.d"
 
+[alacritty.files]
+"packages/alacritty" = "~/AppData/Roaming/Alacritty"
