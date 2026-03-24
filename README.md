@@ -82,6 +82,7 @@ These are the config packages currently maintained in this repository and refere
 | `starship` | Shared Starship prompt symbols/config | Linux, macOS, Windows |
 | `tmux` | Modular tmux config with TPM bootstrap in post-install | Linux, macOS |
 | `powershell` | Modular PowerShell profile and helper modules | Windows |
+| `alacritty` | Single-entry Alacritty configuration deployed to the platform Alacritty config directory | Linux, macOS, Windows |
 
 ## Software Install Lists
 
