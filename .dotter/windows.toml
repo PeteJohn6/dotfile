@@ -12,4 +12,5 @@
 "packages/powershell/profile.d" = "~/OneDrive/Documents/PowerShell/profile.d"
 
 [alacritty.files]
-"packages/alacritty" = "~/AppData/Roaming/Alacritty"
+"packages/alacritty/alacritty.toml.tmpl" = { type = "template", target = "~/AppData/Roaming/Alacritty/alacritty.toml" }
+"packages/alacritty/themes" = { type = "symbolic", target = "~/AppData/Roaming/Alacritty/themes" }
