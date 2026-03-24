@@ -8,17 +8,18 @@ Modular PowerShell profile with Git and Docker utilities.
 
 ## Commands
 
-### Git Module (requires: git, fzf for gitwts)
+### Git Module (requires: git, fzf for gitco, gitwts and gitwtr)
 | Command | Description |
 |---------|-------------|
 | gits | git status |
 | gitl | git log --oneline --graph |
-| gitco | git checkout |
+| gitco | git checkout; interactive branch selector when called without args (fzf) |
 | gitcm | git commit |
 | gitp | git push |
 | gitpl | git pull |
 | gitwt | git worktree |
 | gitwts | Interactive worktree selector (fzf) |
+| gitwtr | Interactive worktree remover (fzf, confirmation required) |
 
 ### Docker Module (requires: docker, fzf for interactive)
 Naming: `dockerf*` means an interactive fzf-powered command.

@@ -10,3 +10,7 @@
 [zsh.files]
 "packages/zsh/.zshrc" = "~/.zshrc"
 "packages/zsh/conf.d" = "~/.config/zsh/conf.d"
+
+[tmux.files]
+"packages/tmux/.tmux.conf" = "~/.tmux.conf"
+"packages/tmux/conf.d" = "~/.tmux.d"
