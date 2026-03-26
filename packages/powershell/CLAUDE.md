@@ -15,7 +15,7 @@ CRITICAL: Never access the `$PWD/.tree/` folder.
 ## Architecture
 
 ### Main Profile Entry Point
-- **Microsoft.PowerShell_profile.ps1**: Initializes Starship prompt, loads the Chocolatey profile, and auto-loads all modules from `profile.d/` in alphabetical order.
+- **Microsoft.PowerShell_profile.ps1**: Detects minimal terminal sessions, skips repo-managed modules when interactive UX is unavailable, loads the Chocolatey profile, and auto-loads `profile.d/` in alphabetical order for rich terminal sessions.
 
 ### Module Loading System
 Modules in `profile.d/` are loaded automatically in alphabetical order. Numeric prefixes (05-, 10-, 20-, etc.) control load order to handle dependencies.
@@ -26,6 +26,8 @@ Modules in `profile.d/` are loaded automatically in alphabetical order. Numeric 
 ```powershell
 if (-not (Test-Command docker)) { return }
 ```
+
+**Entry-Level Gating**: The main profile short-circuits module loading when `TERM=dumb`, PowerShell is started with `-NonInteractive`, or stdin/stdout are not TTYs.
 
 **fzf Integration**: Interactive functions use fzf for fuzzy selection with preview panes showing relevant context (logs, git status, etc.).
 

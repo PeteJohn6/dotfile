@@ -2,8 +2,34 @@
 # PowerShell Profile - Main Entry Point
 # =============================================================================
 
-# Initialize Starship prompt
-Invoke-Expression (&starship init powershell)
+# Skip repo-managed modules when the shell cannot support interactive profile UX.
+$profileSkipReasons = @()
+if ($env:TERM -and $env:TERM.Equals('dumb', [System.StringComparison]::OrdinalIgnoreCase)) {
+    $profileSkipReasons += 'TERM=dumb'
+}
+if ([Environment]::CommandLine -match '(?i)(?:^|\s)-NonInteractive(?:\s|$)') {
+    $profileSkipReasons += 'non-interactive shell'
+}
+if ([Console]::IsInputRedirected) {
+    $profileSkipReasons += 'stdin is not a TTY'
+}
+if ([Console]::IsOutputRedirected) {
+    $profileSkipReasons += 'stdout is not a TTY'
+}
+
+if ($profileSkipReasons.Count -gt 0) {
+    if ($env:PROFILE_DEBUG) {
+        Write-Host "`n[PowerShell Profile]" -ForegroundColor Cyan
+        Write-Host "  Location: " -NoNewline -ForegroundColor DarkGray
+        Write-Host $PSScriptRoot -ForegroundColor White
+        Write-Host "  Minimal terminal mode: " -NoNewline -ForegroundColor DarkGray
+        Write-Host ($profileSkipReasons -join ', ') -ForegroundColor Yellow
+        Write-Host "  Module load skipped" -ForegroundColor Yellow
+        Write-Host ""
+    }
+
+    return
+}
 
 # Import Chocolatey Profile for tab-completion support
 # See https://ch0.co/tab-completion for details

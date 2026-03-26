@@ -4,9 +4,31 @@
 # This script tests whether profile modules can load and which prerequisites
 # are available in the system PATH.
 
+function Get-ProfileMinimalModeReasons {
+    $reasons = @()
+
+    if ($env:TERM -and $env:TERM.Equals('dumb', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $reasons += 'TERM=dumb'
+    }
+    if ([Environment]::CommandLine -match '(?i)(?:^|\s)-NonInteractive(?:\s|$)') {
+        $reasons += 'non-interactive shell'
+    }
+    if ([Console]::IsInputRedirected) {
+        $reasons += 'stdin is not a TTY'
+    }
+    if ([Console]::IsOutputRedirected) {
+        $reasons += 'stdout is not a TTY'
+    }
+
+    return $reasons
+}
+
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "PowerShell Profile Diagnostics" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
+
+$minimalReasons = @(Get-ProfileMinimalModeReasons)
+$expectedMinimalMode = $minimalReasons.Count -gt 0
 
 # === Check Prerequisites ===
 Write-Host "[1] Checking Prerequisites" -ForegroundColor Yellow
@@ -67,36 +89,42 @@ if (Test-Path $profileDir) {
         Sort-Object Name |
         ForEach-Object {
             $moduleName = $_.Name
-            Write-Host "`n  Testing: " -NoNewline -ForegroundColor DarkGray
-            Write-Host $moduleName -ForegroundColor White
+            if ($expectedMinimalMode -and $moduleName -eq '07-starship.ps1') {
+                Write-Host "`n  Skipping: " -NoNewline -ForegroundColor DarkGray
+                Write-Host $moduleName -ForegroundColor White
+                Write-Host "    [SKIPPED] Requires a rich terminal session" -ForegroundColor Yellow
+            } else {
+                Write-Host "`n  Testing: " -NoNewline -ForegroundColor DarkGray
+                Write-Host $moduleName -ForegroundColor White
 
-            try {
-                # Create a new scope to test loading
-                & {
-                    . $_.FullName
-                }
+                try {
+                    # Create a new scope to test loading
+                    & {
+                        . $_.FullName
+                    }
 
-                Write-Host "    [OK] " -NoNewline -ForegroundColor Green
-                Write-Host "Module loaded without errors" -ForegroundColor White
-                $moduleResults += [PSCustomObject]@{
-                    Module = $moduleName
-                    Status = 'OK'
-                    Error = $null
-                }
-            } catch {
-                Write-Host "    [ERROR] " -NoNewline -ForegroundColor Red
-                Write-Host $_.Exception.Message -ForegroundColor Red
-                $moduleResults += [PSCustomObject]@{
-                    Module = $moduleName
-                    Status = 'ERROR'
-                    Error = $_.Exception.Message
+                    Write-Host "    [OK] " -NoNewline -ForegroundColor Green
+                    Write-Host "Module loaded without errors" -ForegroundColor White
+                    $moduleResults += [PSCustomObject]@{
+                        Module = $moduleName
+                        Status = 'OK'
+                        Error = $null
+                    }
+                } catch {
+                    Write-Host "    [ERROR] " -NoNewline -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor Red
+                    $moduleResults += [PSCustomObject]@{
+                        Module = $moduleName
+                        Status = 'ERROR'
+                        Error = $_.Exception.Message
+                    }
                 }
             }
         }
 }
 
-# === Check Available Functions ===
-Write-Host "`n[4] Checking for Expected Functions" -ForegroundColor Yellow
+# === Check Full Profile Behavior ===
+Write-Host "`n[4] Checking Full Profile Behavior" -ForegroundColor Yellow
 Write-Host "-------------------------------------------" -ForegroundColor DarkGray
 
 # Now load the full profile to check what functions are available
@@ -125,9 +153,27 @@ if ($available['docker']) {
 }
 Write-Host "`n  Checking for expected functions:" -ForegroundColor DarkGray
 
+if ($expectedMinimalMode) {
+    Write-Host "  Session mode: " -NoNewline -ForegroundColor DarkGray
+    Write-Host "minimal" -ForegroundColor Yellow
+    Write-Host "  Skip reasons: " -NoNewline -ForegroundColor DarkGray
+    Write-Host ($minimalReasons -join ', ') -ForegroundColor Yellow
+} else {
+    Write-Host "  Session mode: " -NoNewline -ForegroundColor DarkGray
+    Write-Host "rich" -ForegroundColor Green
+}
+
 foreach ($func in $expectedFunctions) {
     $found = Get-Command $func -ErrorAction SilentlyContinue
-    if ($found) {
+    if ($expectedMinimalMode) {
+        if ($found) {
+            Write-Host "    [UNEXPECTED] " -NoNewline -ForegroundColor Red
+            Write-Host "$func should not be defined in minimal mode" -ForegroundColor Red
+        } else {
+            Write-Host "    [OK] " -NoNewline -ForegroundColor Green
+            Write-Host "$func not loaded in minimal mode" -ForegroundColor DarkGray
+        }
+    } elseif ($found) {
         Write-Host "    [OK] " -NoNewline -ForegroundColor Green
         Write-Host "$func " -NoNewline
         Write-Host "($($found.CommandType))" -ForegroundColor DarkGray
@@ -141,6 +187,14 @@ foreach ($func in $expectedFunctions) {
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "Summary" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
+
+Write-Host "`nProfile Session Mode: " -NoNewline -ForegroundColor Yellow
+if ($expectedMinimalMode) {
+    Write-Host "minimal" -NoNewline -ForegroundColor Yellow
+    Write-Host " ($($minimalReasons -join ', '))" -ForegroundColor DarkGray
+} else {
+    Write-Host "rich" -ForegroundColor Green
+}
 
 $missingPrereqs = $prerequisites | Where-Object { -not $available[$_] }
 if ($missingPrereqs.Count -gt 0) {

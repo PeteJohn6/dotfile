@@ -6,7 +6,7 @@ This guide provides detailed instructions for verifying and debugging the modula
 
 | Task | Command |
 |------|---------|
-| **Test profile changes** | `pwsh -NoProfile -NoExit -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'"` |
+| **Test rich profile loading** | `pwsh -NoProfile -NoExit -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'"` |
 | **Enable debug output** | `$env:PROFILE_DEBUG=1; pwsh -NoProfile -NoExit -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'"` |
 | **Run diagnostic script** | `pwsh -NoProfile -Command "& '$PWD\test\test-profile-commands.ps1'"` |
 | **Verify module exports** | `pwsh -NoProfile -Command ". '$PWD\profile.d\05-utils.ps1'; . '$PWD\profile.d\XX-modulename.ps1'; Get-Command -CommandType Function \| Where-Object Source -eq '' \| Format-Table Name"` |
@@ -46,7 +46,7 @@ Get-Command gitco,gitwt,gitwts,gitwtr,dockerfexec,dockerfshell,gits,dockerps,doc
 ```
 
 ### Comprehensive Test
-Load profile and verify all commands in one step:
+Load profile and verify all commands in one step from a rich terminal:
 ```powershell
 pwsh -NoProfile -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'; Get-Command gitco,gitwt,gitwts,gitwtr,dockerfexec,dockerfshell,gits,dockerps,dockercompose -ErrorAction SilentlyContinue | Format-Table Name,CommandType"
 ```
@@ -60,8 +60,10 @@ pwsh -NoProfile -Command "& '$PWD\test\test-profile-commands.ps1'"
 This will check:
 - Prerequisites (git, docker, fzf, starship)
 - Module loading status
-- Function availability
+- Full-profile behavior for the current session mode
 - Detailed error reporting
+
+If the current PowerShell session is minimal (`TERM=dumb`, `-NonInteractive`, or stdin/stdout are not TTYs), the diagnostic script expects the full profile load to skip repo-managed modules.
 
 ## Debugging Profile Issues
 
@@ -81,6 +83,11 @@ This will check:
 - **Symptom**: Module loads but functions are missing
 - **Cause**: Prerequisites (git, docker, fzf) not in PATH
 - **Solution**: Install missing tools or ensure they're in system PATH
+
+**Issue 4: Full Profile Skips in Automation**
+- **Symptom**: Full profile load shows no repo-managed commands
+- **Cause**: Session is intentionally in minimal mode because the shell is non-interactive or stdin/stdout are redirected
+- **Solution**: Use the diagnostic script for minimal-mode validation, and use a real terminal session for rich-mode verification
 
 ### Debug Workflow
 
@@ -104,7 +111,7 @@ This will check:
    pwsh -NoProfile -Command ". '$PWD\profile.d\10-git.ps1'; Get-Command gitco,gitwt,gitwtr,gits -ErrorAction SilentlyContinue"
    ```
 
-5. **Check Profile Path Resolution**
+5. **Check Rich Profile Path Resolution**
    Ensure modules are loaded from correct location:
    ```powershell
    pwsh -NoProfile -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'" # Should show correct Location
