@@ -10,6 +10,15 @@ SCRIPT_DIR="${0:A:h}"
 PROFILE_ROOT="${SCRIPT_DIR:h}"
 PROFILE_PATH="${PROFILE_ROOT}/.zshrc"
 
+typeset -a minimal_reasons=()
+[[ "${TERM:-}" == "dumb" ]] && minimal_reasons+=("TERM=dumb")
+[[ ! -o interactive ]] && minimal_reasons+=("non-interactive shell")
+[[ ! -t 0 ]] && minimal_reasons+=("stdin is not a TTY")
+[[ ! -t 1 ]] && minimal_reasons+=("stdout is not a TTY")
+
+typeset expected_minimal=0
+(( ${#minimal_reasons[@]} > 0 )) && expected_minimal=1
+
 print
 print "========================================"
 print "Zsh Profile Diagnostics"
@@ -65,6 +74,13 @@ typeset -a module_errors=()
 typeset module_name
 
 for module_name in "$profile_dir"/*.zsh(N); do
+  if (( expected_minimal )) && [[ "${module_name:t}" == "07-starship.zsh" ]]; then
+    print
+    print "  Skipping: ${module_name:t}"
+    print "    [SKIPPED] Requires a rich terminal session"
+    continue
+  fi
+
   print
   print "  Testing: ${module_name:t}"
   if ( source "$module_name" ); then
@@ -75,9 +91,9 @@ for module_name in "$profile_dir"/*.zsh(N); do
   fi
 done
 
-# === Check available functions ===
+# === Check full profile behavior ===
 print
-print "[4] Checking for Expected Functions"
+print "[4] Checking Full Profile Behavior"
 print "-------------------------------------------"
 
 if [[ -f "$PROFILE_PATH" ]]; then
@@ -99,8 +115,21 @@ if [[ "${available[docker]:-0}" == "1" ]]; then
 fi
 
 typeset fn
+if (( expected_minimal )); then
+  print "  Session mode: minimal"
+  print "  Skip reasons: ${(j:, :)minimal_reasons}"
+else
+  print "  Session mode: rich"
+fi
+
 for fn in "${expected_functions[@]}"; do
-  if whence -w "$fn" >/dev/null 2>&1; then
+  if (( expected_minimal )); then
+    if whence -w "$fn" >/dev/null 2>&1; then
+      print "    [UNEXPECTED] ${fn} should not be defined in minimal mode"
+    else
+      print "    [OK] ${fn} not loaded in minimal mode"
+    fi
+  elif whence -w "$fn" >/dev/null 2>&1; then
     print "    [OK] ${fn}"
   else
     print "    [MISSING] ${fn}"
@@ -112,6 +141,14 @@ print
 print "========================================"
 print "Summary"
 print "========================================"
+
+if (( expected_minimal )); then
+  print
+  print "Profile Session Mode: minimal (${(j:, :)minimal_reasons})"
+else
+  print
+  print "Profile Session Mode: rich"
+fi
 
 typeset -a missing_prereqs=()
 for cmd in "${prerequisites[@]}"; do

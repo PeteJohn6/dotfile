@@ -1,10 +1,22 @@
 # PowerShell Profile - Modular Configuration
 
-Modular PowerShell profile with Git and Docker utilities.
+Modular PowerShell profile with Starship, Git, and Docker utilities.
 
 ## Prerequisites
-- PowerShell 7+, Starship (required)
+- PowerShell 7+
+- Starship (optional - loaded only in rich terminal sessions)
 - Git, fzf, Docker (optional - modules auto-disable if missing)
+
+## Load Behavior
+- Main entrypoint: `Microsoft.PowerShell_profile.ps1`
+- Modules: `profile.d/*.ps1` loaded in alphabetical order (numeric prefix controls sequence)
+- `07-starship.ps1` owns prompt initialization when `starship` is available
+- Minimal terminal mode skips all repo-managed profile modules when any of these are true:
+  - `TERM=dumb`
+  - PowerShell started with `-NonInteractive`
+  - stdin is not a TTY
+  - stdout is not a TTY
+- Debug: set `PROFILE_DEBUG=1` before loading the profile to print either loaded modules or the minimal-mode skip reason
 
 ## Commands
 
@@ -36,9 +48,9 @@ Naming: `dockerf*` means an interactive fzf-powered command.
 ## Testing
 
 ```powershell
-# Test with debug output
+# Rich-terminal debug session
 $env:PROFILE_DEBUG=1; pwsh -NoProfile -NoExit -Command ". '$PWD\Microsoft.PowerShell_profile.ps1'"
 
-# Verify all commands
+# Session-aware diagnostics (rich sessions expect commands; minimal sessions expect a skip)
 pwsh -NoProfile -Command "& '$PWD\test\test-profile-commands.ps1'"
 ```

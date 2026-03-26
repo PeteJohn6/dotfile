@@ -4,9 +4,23 @@
 
 typeset -g PROFILE_ROOT="${${(%):-%N}:A:h}"
 
-# Initialize Starship prompt
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init zsh)"
+typeset -ga _profile_skip_reasons=()
+[[ "${TERM:-}" == "dumb" ]] && _profile_skip_reasons+=("TERM=dumb")
+[[ ! -o interactive ]] && _profile_skip_reasons+=("non-interactive shell")
+[[ ! -t 0 ]] && _profile_skip_reasons+=("stdin is not a TTY")
+[[ ! -t 1 ]] && _profile_skip_reasons+=("stdout is not a TTY")
+
+if (( ${#_profile_skip_reasons[@]} > 0 )); then
+  if [[ -n "${PROFILE_DEBUG:-}" ]]; then
+    print
+    print "[Zsh Profile]"
+    print "  Location: ${PROFILE_ROOT}"
+    print "  Minimal terminal mode: ${(j:, :)_profile_skip_reasons}"
+    print "  Module load skipped"
+    print
+  fi
+
+  return 0
 fi
 
 # === Auto-load conf.d modules ===

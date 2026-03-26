@@ -3,13 +3,18 @@
 Modular zsh profile with Git, Docker, and tmux helpers.
 
 ## Prerequisites
-- zsh, Starship (optional, auto-enabled when available)
+- zsh, Starship (optional, loaded by `conf.d/07-starship.zsh` when available)
 - Git, Docker, tmux (optional - related module auto-disables if missing)
 - fzf (optional - only required for `gitco`, `gitwts`, `gitwtr`, and `dockerf*` interactive commands)
 
 ## Load Behavior
 - Main entrypoint: `.zshrc`
 - Modules: `conf.d/*.zsh` loaded in alphabetical order (numeric prefix controls sequence)
+- Minimal terminal mode skips all repo-managed profile modules when any of these are true:
+  - `TERM=dumb`
+  - shell is non-interactive
+  - stdin is not a TTY
+  - stdout is not a TTY
 - Debug: set `PROFILE_DEBUG=1` before sourcing `.zshrc` to print module load summary
 
 ## Commands
@@ -63,10 +68,11 @@ Modular zsh profile with Git, Docker, and tmux helpers.
 # Syntax checks
 zsh -n packages/zsh/.zshrc
 zsh -n packages/zsh/conf.d/05-utils.zsh
+zsh -n packages/zsh/conf.d/07-starship.zsh
 zsh -n packages/zsh/conf.d/10-git.zsh
 zsh -n packages/zsh/conf.d/15-tmux.zsh
 zsh -n packages/zsh/conf.d/20-docker.zsh
 
-# Diagnostics
+# Diagnostics (expects either rich-mode commands or a minimal-mode skip, depending on the session)
 zsh packages/zsh/test/test-profile-commands.zsh
 ```
