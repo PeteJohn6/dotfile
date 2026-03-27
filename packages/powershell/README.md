@@ -30,6 +30,7 @@ Modular PowerShell profile with Starship, Git, and Docker utilities.
 | gitp | git push |
 | gitpl | git pull |
 | gitwt | git worktree |
+| gitwtc | Create a worktree under the main repository `.tree/<branch>` and switch to it |
 | gitwts | Interactive worktree selector (fzf) |
 | gitwtr | Interactive worktree remover (fzf, confirmation required) |
 

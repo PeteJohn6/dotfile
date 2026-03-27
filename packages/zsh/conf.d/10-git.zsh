@@ -60,6 +60,55 @@ _git_branch_items() {
     refs/heads
 }
 
+_git_main_root() {
+  local common_dir
+
+  common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || return 1
+  print -- "${common_dir:h}"
+}
+
+gitwtc() {
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    profile_warn "gitwtc: not inside a Git repository"
+    return 0
+  fi
+
+  if (( $# != 1 )); then
+    profile_warn "gitwtc: usage: gitwtc <branch>"
+    return 0
+  fi
+
+  local branch="$1"
+  if ! git check-ref-format --branch "$branch" >/dev/null 2>&1; then
+    profile_warn "gitwtc: invalid branch name: $branch"
+    return 0
+  fi
+
+  local main_root target_path target_parent
+  main_root="$(_git_main_root)" || {
+    profile_warn "gitwtc: failed to resolve main repository root"
+    return 0
+  }
+
+  target_path="${main_root}/.tree/${branch}"
+  if [[ -e "$target_path" ]]; then
+    profile_warn "gitwtc: target path already exists: $target_path"
+    return 0
+  fi
+
+  target_parent="${target_path:h}"
+  mkdir -p -- "$target_parent" || return $?
+
+  if git show-ref --verify --quiet "refs/heads/$branch" >/dev/null 2>&1; then
+    git worktree add -- "$target_path" "$branch" || return $?
+  else
+    git worktree add -b "$branch" -- "$target_path" || return $?
+  fi
+
+  builtin cd -- "$target_path" || return 0
+  print -- "gitwtc -> $PWD"
+}
+
 gitco() {
   if (( $# > 0 )); then
     git checkout "$@"
