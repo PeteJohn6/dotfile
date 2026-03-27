@@ -45,6 +45,13 @@ function Get-NormalizedPath {
     }
 }
 
+function Get-GitMainRoot {
+    $commonDir = git rev-parse --path-format=absolute --git-common-dir 2>$null
+    if ($LASTEXITCODE -ne 0) { return $null }
+
+    return Get-NormalizedPath (Split-Path -Parent (($commonDir | Select-Object -First 1).Trim()))
+}
+
 function Get-GitBranchItems {
     git for-each-ref `
         --sort=-committerdate `
@@ -57,9 +64,8 @@ function Get-GitWorktreeItems {
     if ($LASTEXITCODE -ne 0) { return @() }
     $currentRoot = Get-NormalizedPath (($currentRoot | Select-Object -First 1).Trim())
 
-    $commonDir = git rev-parse --path-format=absolute --git-common-dir 2>$null
-    if ($LASTEXITCODE -ne 0) { return @() }
-    $mainRoot = Get-NormalizedPath (Split-Path -Parent (($commonDir | Select-Object -First 1).Trim()))
+    $mainRoot = Get-GitMainRoot
+    if (-not $mainRoot) { return @() }
 
     $pwdPath = (Get-Location).Path
     $items = @()
@@ -99,6 +105,79 @@ function Get-GitWorktreeItems {
     }
 
     return $items
+}
+
+function gitwtc {
+<#
+.SYNOPSIS
+Create a Git worktree under the main repository's .tree directory.
+
+.DESCRIPTION
+Creates a new worktree at <main-repo>/.tree/<branch> even when invoked from a
+linked worktree. Existing local branches are attached directly; missing local
+branches are created with `git worktree add -b`. On success, changes the
+current location to the new worktree path.
+
+.EXAMPLE
+gitwtc feature/example
+
+.EXAMPLE
+gitwtc bugfix/login
+#>
+  git rev-parse --is-inside-work-tree *> $null
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "gitwtc: not inside a Git repository" -ForegroundColor Yellow
+    return
+  }
+
+  if ($args.Count -ne 1) {
+    Write-Host "gitwtc: usage: gitwtc <branch>" -ForegroundColor Yellow
+    return
+  }
+
+  $branch = [string]$args[0]
+
+  git check-ref-format --branch $branch *> $null
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "gitwtc: invalid branch name: $branch" -ForegroundColor Red
+    return
+  }
+
+  $mainRoot = Get-GitMainRoot
+  if (-not $mainRoot) {
+    Write-Host "gitwtc: failed to resolve main repository root" -ForegroundColor Red
+    return
+  }
+
+  $treeRoot = Join-Path $mainRoot '.tree'
+  $targetPath = Get-NormalizedPath (Join-Path $treeRoot (($branch -split '/') -join [IO.Path]::DirectorySeparatorChar))
+  if (Test-Path -LiteralPath $targetPath) {
+    Write-Host "gitwtc: target path already exists: $targetPath" -ForegroundColor Red
+    return
+  }
+
+  $targetParent = Split-Path -Parent $targetPath
+  if ($targetParent) {
+    try {
+      New-Item -ItemType Directory -Path $targetParent -Force -ErrorAction Stop *> $null
+    } catch {
+      Write-Host "gitwtc: failed to create parent directory: $targetParent" -ForegroundColor Red
+      return
+    }
+  }
+
+  git show-ref --verify --quiet "refs/heads/$branch" *> $null
+  $branchExists = ($LASTEXITCODE -eq 0)
+
+  if ($branchExists) {
+    git worktree add -- $targetPath $branch
+  } else {
+    git worktree add -b $branch -- $targetPath
+  }
+  if ($LASTEXITCODE -ne 0) { return }
+
+  Set-Location -LiteralPath $targetPath
+  Write-Host ("gitwtc -> " + (Get-Location).Path) -ForegroundColor Green
 }
 
 function gitco {
