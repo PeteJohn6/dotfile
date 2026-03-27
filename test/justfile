@@ -1,0 +1,24 @@
+set shell := ["pwsh", "-NoLogo", "-NoProfile", "-Command"]
+
+default:
+    @just --justfile ./justfile --list
+
+[windows]
+windows-static:
+    @pwsh -NoLogo -NoProfile -File ./windows-sandbox/launch.ps1 -Mode Full -ValidateOnly
+
+[windows]
+windows-runtime-prepare:
+    @pwsh -NoLogo -NoProfile -File ./windows-sandbox/prepare-runtime.ps1
+
+[windows]
+windows-sandbox-logon:
+    @pwsh -NoLogo -NoProfile -File ./windows-sandbox/launch.ps1 -Mode Logon
+
+[windows]
+windows-sandbox-stop:
+    @pwsh -NoLogo -NoProfile -File ./windows-sandbox/launch.ps1 -Mode Logon -StopExisting
+
+[windows]
+windows-sandbox-full:
+    @pwsh -NoLogo -NoProfile -File ./windows-sandbox/launch.ps1 -Mode Full

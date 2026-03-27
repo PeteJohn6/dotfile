@@ -1,6 +1,8 @@
 # Dotfiles Management System
 # Cross-platform dotfiles orchestrator using dotter and just
 
+set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-Command"]
+
 # Platform detection
 os_type := os()
 

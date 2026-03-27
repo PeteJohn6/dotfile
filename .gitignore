@@ -24,3 +24,10 @@ desktop.ini
 
 # packages
 packages/nvim/lazy-lock.json
+
+# Windows Sandbox test harness outputs
+test/windows-sandbox/assets/*.zip
+!test/windows-sandbox/assets/*.ps1
+!test/windows-sandbox/assets/*.cmd
+test/windows-sandbox/logs/
+test/windows-sandbox/generated/

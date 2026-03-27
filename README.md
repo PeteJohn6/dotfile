@@ -15,7 +15,7 @@ The default workflow is still `bootstrap -> install -> stow -> post`, with `just
 
 ### 1. Bootstrap
 
-Bootstrap prepares the repo for your platform, installs `just`, fetches `dotter`, and copies a platform-appropriate `.dotter/local.toml` template if one does not already exist.
+Bootstrap prepares the repo for your platform, installs `just` and `dotter`, and copies a platform-appropriate `.dotter/local.toml` template if one does not already exist.
 
 **Linux/macOS:**
 ```bash
@@ -173,9 +173,35 @@ In other words: `packages/*.list` decides what software gets installed, while `.
 - `.dotter/CLAUDE.md` - dotter configuration guide
 - `bootstrap/CLAUDE.md` - bootstrap implementation notes
 - `script/CLAUDE.md` - install and post orchestration notes
+- `test/justfile` - test-only entrypoints for static validation and disposable environment checks
+- `test/windows-sandbox/README.md` - Windows Sandbox test harness usage
 - `packages/zsh/README.md` - zsh profile details
 - `packages/powershell/README.md` - PowerShell profile details
 - `packages/tmux/README.md` - tmux configuration details
+
+## Testing
+
+Test workflows are intentionally separated from the user-facing `justfile`.
+
+Use the dedicated test justfile from the repository root:
+
+```powershell
+just --justfile test/justfile windows-runtime-prepare
+just --justfile test/justfile windows-static
+just --justfile test/justfile windows-sandbox-logon
+just --justfile test/justfile windows-sandbox-stop
+just --justfile test/justfile windows-sandbox-full
+```
+
+`windows-static` performs Windows-side static validation only.
+
+`windows-sandbox-logon` validates the CLI-driven Windows Sandbox stage-0 bootstrap path (`wsb start/list/exec/connect`, `powershell.exe`, ZIP expansion, and `pwsh.exe` discovery).
+
+`windows-sandbox-stop` stops any currently running Windows Sandbox session before the next disposable run.
+
+`windows-sandbox-full` launches a disposable Windows Sandbox environment and runs the full Windows workflow (`bootstrap` then `just up`) using a host-staged PowerShell ZIP runtime.
+
+These test entrypoints assume Windows Sandbox is single-instance and block new launches if another Sandbox session is already active. Waited runs also auto-close the disposable Sandbox session once a terminal state is observed.
 
 ## License
 
