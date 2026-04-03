@@ -131,8 +131,8 @@ preinstall_neovim() {
 }
 
 preinstall_starship() {
-    if [[ "$IS_CONTAINER" != "1" ]]; then
-        preinstall_log "Skipping starship manual install (not in container)"
+    if [[ "$PLATFORM" != "linux" ]]; then
+        preinstall_log "Skipping starship manual install (not on linux)"
         return 0
     fi
 

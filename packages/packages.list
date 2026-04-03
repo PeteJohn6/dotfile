@@ -22,14 +22,15 @@ eza
 lsd
 
 # -- terminal / GUI --
-alacritty
-wezterm
 starship
+zsh
+alacritty @macos,windows
+wezterm @macos,windows
 tmux @macos,linux
-nushell
+# nushell
 
 # editor
-zed
+zed @macos,windows
 neovide @windows
 
 # -- language toolchains --
