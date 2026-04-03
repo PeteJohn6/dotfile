@@ -1,0 +1,6 @@
+[general]
+import = ["./alacritty.toml"]
+
+[terminal.shell]
+program = "wsl.exe"
+args = ["-d", "Ubuntu-20.04", "--cd", "/home"]

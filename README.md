@@ -47,6 +47,14 @@ includes = [".dotter/windows.toml"]
 packages = ["git", "nvim", "starship", "powershell"]
 ```
 
+When the `alacritty` package is enabled on Windows, the repo also deploys an explicit WSL entrypoint profile at `%APPDATA%\Alacritty\ubuntu-20_04.toml`. Launch it with:
+
+```powershell
+alacritty --config-file "$env:APPDATA\Alacritty\ubuntu-20_04.toml"
+```
+
+That profile imports the shared `alacritty.toml`, opens `Ubuntu-20.04`, and starts in `/home`.
+
 ### 3. Install and Deploy
 
 **All-in-one setup:**
