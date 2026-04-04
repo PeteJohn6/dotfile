@@ -14,7 +14,7 @@ function M.to_relative_path(file_path)
     if not file_path or file_path == "" then
         return nil
     end
-    
+
     local uv = vim.loop
     local real_file = (uv.fs_realpath(file_path) or file_path)
     local cwd = vim.fn.getcwd(-1, -1)
@@ -39,7 +39,7 @@ function M.get_current_relative_path()
     if not file_path then
         return nil
     end
-    
+
     local rel_path = M.to_relative_path(file_path)
     return M.format_display_path(rel_path)
 end

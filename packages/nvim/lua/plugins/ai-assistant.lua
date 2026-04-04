@@ -9,7 +9,7 @@ function M.get_selected_location()
 
     local path_part = path.get_current_relative_path()
     local range = selection.get_selection_range()
-    
+
     local location = (range.start_line == range.end_line)
         and string.format("%s:%d", path_part, range.start_line)
         or string.format("%s:%d-%d", path_part, range.start_line, range.end_line)

@@ -3,17 +3,17 @@ local M = {}
 function M.get_selection_range()
     local mode = vim.api.nvim_get_mode().mode
     local start_line, end_line
-    
+
     if mode == "v" or mode == "V" or mode == "\22" then -- \22 == <C-v>
         local start_pos = vim.fn.getpos("v")
         local end_pos = vim.api.nvim_win_get_cursor(0)
         start_line = start_pos[2]
         end_line = end_pos[1]
-        
+
         if start_line > end_line then
             start_line, end_line = end_line, start_line
         end
-        
+
         return {
             start_line = start_line,
             end_line = end_line,
