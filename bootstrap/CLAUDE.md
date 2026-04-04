@@ -7,7 +7,7 @@
 
 Bootstrap scripts prepare the system with minimal dependencies required to run the dotfiles management system. The bootstrap phase installs:
 1. **Package manager** (if needed) - Homebrew (macOS), Scoop (Windows)
-2. **`just`** - Task runner installed via package manager (system-wide)
+2. **`just`** - Task runner installed system-wide via package manager, with a Linux fallback to the official installer when the package is unavailable
 3. **`dotter`** - Dotfiles manager downloaded as local binary to `bin/` (project-local)
 
 ## Design Philosophy
@@ -15,13 +15,13 @@ Bootstrap scripts prepare the system with minimal dependencies required to run t
 ### Unified Approach
 - **Single `bootstrap.sh`** for Linux/macOS (platform detection at runtime)
 - **`bootstrap.ps1`** for Windows
-- **Consistent strategy**: Package manager for `just`, local binary for `dotter`
+- **Mostly consistent strategy**: Package manager for `just`, except Linux falls back to the official installer when the package is missing; `dotter` remains project-local
 
 ### Installation Strategy
 
 | Tool | Linux | macOS | Windows | Location |
 |------|-------|-------|---------|----------|
-| `just` | apt/dnf/pacman | Homebrew | Scoop | System-wide (/usr/local/bin, etc.) |
+| `just` | apt/dnf/pacman, fallback to official installer when package missing | Homebrew | Scoop | System-wide (`INSTALL_BIN_DIR`, default `/usr/local/bin`, on Linux fallback) |
 | `dotter` | Download to bin/ | Download to bin/ | Download to bin/ | Project-local (./bin/) |
 
 ### Why This Approach?
@@ -30,6 +30,7 @@ Bootstrap scripts prepare the system with minimal dependencies required to run t
    - Available in all major package managers (apt, dnf, pacman, brew, scoop)
    - System-wide installation is standard practice for task runners
    - Easier updates via package manager
+   - Linux keeps a constrained fallback to the official installer only when the package manager has no `just` package
 
 2. **`dotter` as local binary**:
    - Not available in all package managers (e.g., apt doesn't have it)
@@ -51,7 +52,9 @@ Bootstrap scripts prepare the system with minimal dependencies required to run t
 5. **Package Manager Setup**:
    - Linux: Uses detected package manager (`PKG_MANAGER`)
    - macOS: Installs Homebrew if not present
-6. **Install `just`**: Via package manager (system-wide)
+6. **Install `just`**:
+   - Linux: Via package manager first; if the package manager reports that `just` does not exist, run the official installer into `INSTALL_BIN_DIR` (default `/usr/local/bin`)
+   - macOS: Via Homebrew
 7. **Download `dotter`**: Latest release from GitHub to `bin/` (project-local)
 
 ### Windows (`bootstrap.ps1`)
@@ -100,6 +103,8 @@ This allows bootstrap to work seamlessly in:
 - `download_dotter()` - Downloads dotter binary from GitHub
 - `bootstrap_linux()` - Linux-specific bootstrap logic
 - `bootstrap_macos()` - macOS-specific bootstrap logic
+- `install_just_via_package_manager()` - Attempts Linux package-manager installation of `just`
+- `install_just_via_official_script()` - Linux fallback installer for `just` into `INSTALL_BIN_DIR`
 
 ## Usage
 
@@ -124,6 +129,8 @@ Once bootstrap completes:
 - `just` is available system-wide
 - `dotter` is available at `./bin/dotter` (or `.\bin\dotter.exe` on Windows)
 - The `justfile` will use the local dotter binary for all operations
+
+If Linux bootstrap falls back to the official `just` installer, it installs to `INSTALL_BIN_DIR` (default `/usr/local/bin`). Custom values for `INSTALL_BIN_DIR` should already be in `PATH` for later shells.
 
 Next steps:
 ```bash

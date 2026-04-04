@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Unified Bootstrap Script for Linux/macOS
-# Installs just via package managers and downloads dotter to local bin/
+# Installs just via package managers (with Linux fallback) and downloads dotter to local bin/
 
 set -euo pipefail
 
@@ -18,6 +18,31 @@ setup_bin_directory() {
     if ! grep -q "^bin/$" .gitignore 2>/dev/null; then
         echo "bin/" >> .gitignore
         echo "[bootstrap] Added bin/ to .gitignore"
+    fi
+}
+
+download_url_to_file() {
+    local dest=$1
+    local url=$2
+
+    if command -v curl &> /dev/null; then
+        curl -fL --retry 3 --connect-timeout 10 -o "$dest" "$url"
+    elif command -v wget &> /dev/null; then
+        wget -O "$dest" "$url"
+    else
+        return 1
+    fi
+}
+
+download_url_to_stdout() {
+    local url=$1
+
+    if command -v curl &> /dev/null; then
+        curl -fsSL "$url"
+    elif command -v wget &> /dev/null; then
+        wget -q -O - "$url"
+    else
+        return 1
     fi
 }
 
@@ -157,28 +182,13 @@ download_dotter() {
 
     echo "[bootstrap] Downloading dotter for ${target_platform}-${arch}..."
 
-    # Define download function based on available tool
-    if command -v curl &> /dev/null; then
-        download_file() {
-            curl -fL --retry 3 --connect-timeout 10 -o "$1" "$2"
-        }
-        download_string() {
-            curl -fsSL "$1"
-        }
-    elif command -v wget &> /dev/null; then
-        download_file() {
-            wget -O "$1" "$2"
-        }
-        download_string() {
-            wget -q -O - "$1"
-        }
-    else
+    if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
         echo "[bootstrap] ERROR: No download tool available (curl/wget)"
         exit 1
     fi
 
     # Fetch latest version from GitHub
-    if ! release_json=$(download_string https://api.github.com/repos/SuperCuber/dotter/releases/latest); then
+    if ! release_json=$(download_url_to_stdout https://api.github.com/repos/SuperCuber/dotter/releases/latest); then
         echo "[bootstrap] ERROR: Failed to fetch dotter release metadata"
         exit 1
     fi
@@ -197,7 +207,7 @@ download_dotter() {
 
     tmp_path="bin/.dotter.tmp.$$"
     rm -f "$tmp_path"
-    if ! download_file "$tmp_path" "$dotter_url"; then
+    if ! download_url_to_file "$tmp_path" "$dotter_url"; then
         echo "[bootstrap] ERROR: Failed to download dotter"
         rm -f "$tmp_path"
         exit 1
@@ -234,9 +244,107 @@ ensure_dotter() {
 # Linux Bootstrap
 # ============================================================================
 
+JUST_PKG_NOT_FOUND_EXIT=42
+
+setup_linux_just_install_dir() {
+    if [[ -z "${INSTALL_BIN_DIR:-}" ]]; then
+        INSTALL_BIN_DIR="/usr/local/bin"
+    fi
+    export INSTALL_BIN_DIR
+
+    case ":$PATH:" in
+        *":$INSTALL_BIN_DIR:"*) ;;
+        *) export PATH="$INSTALL_BIN_DIR:$PATH" ;;
+    esac
+}
+
+just_package_missing() {
+    local output=$1
+
+    case "$PKG_MANAGER" in
+        apt)
+            [[ "$output" == *"Unable to locate package just"* ]]
+            ;;
+        dnf)
+            [[ "$output" == *"No match for argument: just"* ]] || [[ "$output" == *"Unable to find a match: just"* ]]
+            ;;
+        pacman)
+            [[ "$output" == *"target not found: just"* ]]
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+install_just_via_package_manager() {
+    local output=""
+    local status=0
+
+    case "$PKG_MANAGER" in
+        apt)
+            maybe_sudo apt-get update -qq || return $?
+            output="$(maybe_sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq just 2>&1)" || status=$?
+            ;;
+        dnf)
+            output="$(maybe_sudo env DNF_YUM_AUTO_YES=1 dnf install -y -q just 2>&1)" || status=$?
+            ;;
+        pacman)
+            output="$(maybe_sudo pacman -Sy --noconfirm just 2>&1)" || status=$?
+            ;;
+        *)
+            echo "[bootstrap] ERROR: Unsupported Linux package manager: $PKG_MANAGER" >&2
+            return 1
+            ;;
+    esac
+
+    if [[ -n "$output" ]]; then
+        if [[ "$status" -eq 0 ]]; then
+            printf '%s\n' "$output"
+        else
+            printf '%s\n' "$output" >&2
+        fi
+    fi
+
+    if [[ "$status" -eq 0 ]]; then
+        return 0
+    fi
+
+    if just_package_missing "$output"; then
+        return "$JUST_PKG_NOT_FOUND_EXIT"
+    fi
+
+    return "$status"
+}
+
+install_just_via_official_script() {
+    local installer_url="https://just.systems/install.sh"
+
+    if ! maybe_sudo mkdir -p "$INSTALL_BIN_DIR"; then
+        echo "[bootstrap] ERROR: Failed to create just install directory: $INSTALL_BIN_DIR"
+        return 1
+    fi
+
+    echo "[bootstrap] Package manager does not provide just, falling back to official installer..."
+    if ! download_url_to_stdout "$installer_url" | maybe_sudo bash -s -- --to "$INSTALL_BIN_DIR"; then
+        echo "[bootstrap] ERROR: Failed to install just via official installer"
+        return 1
+    fi
+
+    if ! command -v just &> /dev/null; then
+        echo "[bootstrap] ERROR: just installer completed but command not found in PATH"
+        return 1
+    fi
+}
+
 bootstrap_linux() {
+    local status=0
+
     # Check and install required dependencies (curl/wget for dotter download)
     echo "[bootstrap] Checking required dependencies..."
+
+    setup_linux_just_install_dir
+    echo "[bootstrap] just fallback bin dir: $INSTALL_BIN_DIR"
 
     if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
         echo "[bootstrap] Neither curl nor wget found. Installing curl..."
@@ -260,18 +368,17 @@ bootstrap_linux() {
         echo "[bootstrap] just already installed: $(just --version)"
     else
         echo "[bootstrap] Installing just via $PKG_MANAGER..."
-        case "$PKG_MANAGER" in
-            apt)
-                maybe_sudo apt-get update -qq
-                DEBIAN_FRONTEND=noninteractive maybe_sudo apt-get install -y -qq just
-                ;;
-            dnf)
-                maybe_sudo dnf install -y -q just
-                ;;
-            pacman)
-                maybe_sudo pacman -Sy --noconfirm just
-                ;;
-        esac
+        if install_just_via_package_manager; then
+            :
+        else
+            status=$?
+            if [[ "$status" -eq "$JUST_PKG_NOT_FOUND_EXIT" ]]; then
+                install_just_via_official_script || exit 1
+            else
+                echo "[bootstrap] ERROR: Failed to install just via $PKG_MANAGER"
+                exit "$status"
+            fi
+        fi
         echo "[bootstrap] just installed: $(just --version)"
     fi
 

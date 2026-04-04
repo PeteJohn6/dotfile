@@ -34,7 +34,7 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
 
     a. Sets up environment variables if needed
     b. Installs a package manager on macOS/Windows if needed
-    c. Uses the package manager to install: `just` (task runner) and `dotter` (dotfiles manager)
+    c. Installs `just` (task runner) via the platform package manager, except Linux may fall back to the official installer in `INSTALL_BIN_DIR` when the package is unavailable; downloads `dotter` locally
 
 2. `just` runs the following tasks in order:
     1. **Install** (`script/install.sh` | `script/install.ps1`)
