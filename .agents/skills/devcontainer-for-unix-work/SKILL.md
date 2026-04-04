@@ -1,13 +1,30 @@
 ---
-name: devcontainer-for-testing
-description: When Unix-side debugging or testing is needed, use devcontainer to create a disposable container-based test environment. Run setup, debugging, and test commands inside `/workspace` in the container rather than on the host.
+name: devcontainer-for-unix-work
+description: Use when Codex needs to develop, debug, reproduce, validate, or test Unix-side changes in this repository with the disposable devcontainer at `test/devcontainer/devcontainer.json`. Prefer this skill for Linux/macOS command execution, bootstrap or install debugging, shell or profile investigation, package-manager or path issues, and any request phrased like "test in devcontainer" or "debug in devcontainer". Run setup, development, debugging, and test commands inside `/workspace` unless the task is explicitly host-only.
 ---
 
-# Devcontainer for Testing
+# Devcontainer for Unix Work
 
 ## Overview
 
-When Unix-side debugging or testing is needed, use the repository's test devcontainer defined at `test/devcontainer/devcontainer.json` as the default disposable environment. Manage its lifecycle through the devcontainer CLI rather than using ad hoc Docker commands. The container's `/workspace` contains the full source code. Operations inside `/workspace` do not need to worry about polluting the source code, so dependency installation, builds, debugging, and tests should all happen there unless the task explicitly targets the host.
+Use the repository's test devcontainer at `test/devcontainer/devcontainer.json` as the default environment for Unix-side development, debugging, reproduction, and testing. Manage it through the devcontainer CLI rather than ad hoc Docker commands. Treat `/workspace` as the main execution area for Linux/macOS work, and leave work on the host only when the task is explicitly host-only.
+
+## Trigger Rules
+
+Use this skill by default when Unix-side command execution is part of the task, including:
+
+- Developing, debugging, or reproducing Linux/macOS issues in `bootstrap.sh`, `install.sh`, shell configs, or package-manager flows
+- Validating Unix-side behavior after a code change, even when the user only says "debug", "reproduce", "validate", or "test"
+- Requests phrased like `test in devcontainer`, `debug in devcontainer`, or `use devcontainer`
+
+Skip this skill only when the work is clearly host-only, Windows-only, or intentionally targets behavior outside the disposable container.
+
+## Common Examples
+
+- Debug a Linux bootstrap or install failure in `bootstrap/bootstrap.sh` or `script/install.sh`
+- Reproduce a shell, PATH, package-manager, or permission issue on Unix
+- Validate a Unix-side code change before summarizing results
+- Run repository tests in the disposable devcontainer instead of on the host
 
 ## Workflow
 

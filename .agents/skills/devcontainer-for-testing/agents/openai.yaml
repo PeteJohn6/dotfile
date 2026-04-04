@@ -1,4 +1,0 @@
-interface:
-  display_name: "Devcontainer for Testing"
-  short_description: "Debug or test in a disposable devcontainer"
-  default_prompt: "Use $devcontainer-for-testing to create the repository test environment from test/devcontainer/devcontainer.json, run Unix-side debugging and test commands inside /workspace, resync from /repo-ro when needed, and clean up afterward."

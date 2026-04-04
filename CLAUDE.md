@@ -154,6 +154,6 @@ just uninstall   # dotter undeploy --verbose
 
 ## Debugging and Testing
 
-1. During development, if Unix-side debugging is needed, use the `devcontainer-for-testing` skill in a disposable environment.
+1. During Unix-side development, debugging, reproduction, or testing that requires command execution, use the `devcontainer-for-unix-work` skill by default in a disposable environment. Only stay on the host when the task is explicitly host-only or Windows-only.
 
-2. After completing the overall change, validate the full workflow in a fresh disposable container environment. For Windows-only changes, perform static checks only; no runtime testing is required. For Unix-only changes, use the `devcontainer-for-testing` skill for testing. If changes affect both platforms, test only the Unix side.
+2. After completing the overall change, validate the full workflow in a fresh disposable container environment. For Windows-only changes, perform static checks only; no runtime testing is required. For Unix-only changes, use the `devcontainer-for-unix-work` skill for testing. If changes affect both platforms, test only the Unix side.
