@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # This file is a rule library sourced by install.sh.
 # Required caller context:
-# - PLATFORM / IS_CONTAINER / PKG_MANAGER / STRICT / INSTALL_BIN_DIR
-# - preinstall_log()
-# - preinstall_handle_failure()
+# - PLATFORM / PKG_MANAGER / STRICT / INSTALL_BIN_DIR / INSTALL_OPT_DIR
+# - maybe_sudo()
+# - preinstall_log() / preinstall_handle_failure()
 
 cleanup_tmp_dir() {
     local dir="$1"
@@ -23,18 +23,18 @@ preinstall_neovim() {
         return 0
     fi
 
-    local install_root="$HOME/.local/opt"
+    local install_root="$INSTALL_OPT_DIR"
     local install_dir="$install_root/neovim"
     local link_dir="$INSTALL_BIN_DIR"
     local link_bin="$link_dir/nvim"
     local arch tarball_url tmp_dir archive_file extract_dir extracted_root
 
     if [[ -x "$install_dir/bin/nvim" ]]; then
-        if ! mkdir -p "$link_dir"; then
+        if ! maybe_sudo mkdir -p "$link_dir"; then
             preinstall_handle_failure "Failed to create link directory: $link_dir"
             return 0
         fi
-        if ! ln -sf "$install_dir/bin/nvim" "$link_bin"; then
+        if ! maybe_sudo ln -sf "$install_dir/bin/nvim" "$link_bin"; then
             preinstall_handle_failure "Failed to link existing nvim binary at $link_bin"
             return 0
         fi
@@ -98,24 +98,24 @@ preinstall_neovim() {
         return 0
     fi
 
-    if ! mkdir -p "$install_root" "$link_dir"; then
+    if ! maybe_sudo mkdir -p "$install_root" "$link_dir"; then
         cleanup_tmp_dir "$tmp_dir"
         preinstall_handle_failure "Failed to create neovim install directories"
         return 0
     fi
 
-    if ! rm -rf "$install_dir"; then
+    if ! maybe_sudo rm -rf "$install_dir"; then
         cleanup_tmp_dir "$tmp_dir"
         preinstall_handle_failure "Failed to clear existing neovim directory: $install_dir"
         return 0
     fi
-    if ! mv "$extracted_root" "$install_dir"; then
+    if ! maybe_sudo mv "$extracted_root" "$install_dir"; then
         cleanup_tmp_dir "$tmp_dir"
         preinstall_handle_failure "Failed to move neovim into $install_dir"
         return 0
     fi
 
-    if ! ln -sf "$install_dir/bin/nvim" "$link_bin"; then
+    if ! maybe_sudo ln -sf "$install_dir/bin/nvim" "$link_bin"; then
         cleanup_tmp_dir "$tmp_dir"
         preinstall_handle_failure "Failed to link nvim binary at $link_bin"
         return 0
@@ -151,7 +151,7 @@ preinstall_starship() {
         return 0
     fi
 
-    if ! mkdir -p "$INSTALL_BIN_DIR"; then
+    if ! maybe_sudo mkdir -p "$INSTALL_BIN_DIR"; then
         preinstall_handle_failure "Failed to create starship bin directory: $INSTALL_BIN_DIR"
         return 0
     fi
@@ -174,7 +174,7 @@ preinstall_starship() {
         return 0
     fi
 
-    if ! sh "$installer_script" -y -b "$INSTALL_BIN_DIR"; then
+    if ! maybe_sudo sh "$installer_script" -y -b "$INSTALL_BIN_DIR"; then
         cleanup_tmp_dir "$tmp_dir"
         preinstall_handle_failure "Failed to run starship installer"
         return 0

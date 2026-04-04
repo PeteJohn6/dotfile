@@ -39,12 +39,14 @@ else
 fi
 
 if [[ -z "${INSTALL_BIN_DIR:-}" ]]; then
-    if [ "$IS_CONTAINER" -eq 1 ]; then
-        INSTALL_BIN_DIR="/usr/local/bin"
-    else
-        INSTALL_BIN_DIR="$HOME/.local/bin"
-    fi
+    INSTALL_BIN_DIR="/usr/local/bin"
 fi
+
+if [[ -z "${INSTALL_OPT_DIR:-}" ]]; then
+    INSTALL_OPT_DIR="/usr/local/opt"
+fi
+
+export INSTALL_BIN_DIR INSTALL_OPT_DIR
 
 case ":$PATH:" in
     *":$INSTALL_BIN_DIR:"*) ;;
@@ -57,7 +59,8 @@ if [[ "$PKG_MANAGER" == "brew" ]] && ! command -v brew >/dev/null 2>&1; then
 fi
 
 echo "[install] Package manager: $PKG_MANAGER"
-echo "[install] Binary link dir: $INSTALL_BIN_DIR"
+echo "[install] Manual install bin dir: $INSTALL_BIN_DIR"
+echo "[install] Manual install opt dir: $INSTALL_OPT_DIR"
 
 trim() {
     local s="$1"

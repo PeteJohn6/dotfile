@@ -55,7 +55,7 @@ Some packages trigger pre-install setup in `packages/pre-install-unix.sh` before
 
 Pre-install hooks allow executing custom logic before package manager installation, for example:
 
-- Directly download binary files (e.g., Neovim) and install to `INSTALL_BIN_DIR` instead of relying on potentially outdated package manager versions. Since the install script checks tool availability via `cli_name` before running package manager installation, this approach allows skipping the package manager step and using pre-installed binaries directly.
+- Directly download binary files and install command entrypoints to `INSTALL_BIN_DIR`, using `INSTALL_OPT_DIR` for directory-based bundles such as tarballs. Since the install script checks tool availability via `cli_name` before running package manager installation, this approach allows skipping the package manager step and using pre-installed binaries directly.
 
 - Add third-party package sources (e.g., Neovim's official apt repository) to obtain newer package versions.
 
@@ -63,7 +63,11 @@ Pre-install hooks allow executing custom logic before package manager installati
 
 1. `neovim` 
 
-pre-install rule triggers when `PKG_MANAGER` is `apt`; installs Neovim tarball under `~/.local/opt/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: host `~/.local/bin/nvim`, container `/usr/local/bin/nvim`)
+pre-install rule triggers when `PKG_MANAGER` is `apt`; installs the Neovim tarball under `INSTALL_OPT_DIR/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: `/usr/local/opt/neovim` and `/usr/local/bin/nvim`)
+
+2. `starship`
+
+pre-install rule triggers when `PLATFORM` is `linux`; installs the official binary into `INSTALL_BIN_DIR` (default: `/usr/local/bin`)
 
 ## Per-Tool Post-Install Scripts (`packages/post/`)
 

@@ -40,7 +40,7 @@ This is a cross-platform dotfiles management system using a "bootstrap + justfil
     1. **Install** (`script/install.sh` | `script/install.ps1`)
         a. Detects runtime context (`PLATFORM` / `IS_CONTAINER` / `PKG_MANAGER`)
         b. Parses `packages/packages.list` (desktop) or `packages/container.list` (container)
-        c. Runs package-driven pre-install rules (e.g. binary fallback installs using `INSTALL_BIN_DIR`: host default `~/.local/bin`, container default `/usr/local/bin`, and prepends it to `PATH` for current install run)
+        c. Sets unified Unix manual-install paths (`INSTALL_BIN_DIR=/usr/local/bin`, `INSTALL_OPT_DIR=/usr/local/opt` by default), prepends `INSTALL_BIN_DIR` to `PATH` for the current install run, and runs package-driven pre-install rules
         d. Skips packages already satisfied by CLI availability
         e. Installs remaining tools via package managers (apt/dnf/pacman/brew/winget/choco)
 

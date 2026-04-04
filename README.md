@@ -113,7 +113,7 @@ In other words: `packages/*.list` decides what software gets installed, while `.
   - Windows: Scoop is the package-manager path implemented by `script/install.ps1`
   - macOS: Homebrew
   - Linux: `apt`, `dnf`, or `pacman`
-- **Unix pre-install hooks**: `packages/pre-install-unix.sh` can install newer binaries before package-manager fallback when needed
+- **Unix pre-install hooks**: `packages/pre-install-unix.sh` can install newer binaries before package-manager fallback when needed. `script/install.sh` provides `INSTALL_BIN_DIR` (default: `/usr/local/bin`) for command entrypoints and `INSTALL_OPT_DIR` (default: `/usr/local/opt`) for directory-based manual installs such as the Neovim tarball.
 
 ### Workflow
 

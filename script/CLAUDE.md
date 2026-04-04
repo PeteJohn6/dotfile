@@ -23,17 +23,21 @@ Install scripts read the unified package list and install software using platfor
 2. Select package list:
    - `IS_CONTAINER=1` -> `packages/container.list`
    - `IS_CONTAINER=0` -> `packages/packages.list`
-3. Parse the list file (skip comments, handle whitespace, filter by comma-separated `@platform` tags)
+3. Set manual-install paths:
+   - `INSTALL_BIN_DIR` (default: `/usr/local/bin`)
+   - `INSTALL_OPT_DIR` (default: `/usr/local/opt`)
+   - Prepend `INSTALL_BIN_DIR` to `PATH` for the current install run
+4. Parse the list file (skip comments, handle whitespace, filter by comma-separated `@platform` tags)
    - Supports `package[(cli_name)]`
    - Supports optional selectors like `@windows` or `@windows,macos`
    - `cli_name` defaults to package name when omitted
    - Handles package lists whose final line does not end with a trailing newline
-4. Source `packages/pre-install-unix.sh` as a rule library
-5. Run package-driven pre-install rules using the rule-map selector
-6. Refresh package indexes after pre-install rules
-7. For each package, check if CLI is already available; if yes, skip package-manager install
-8. Install only unresolved packages via the platform's package manager
-9. Log progress with `succeeded/skipped/failed` summary
+5. Source `packages/pre-install-unix.sh` as a rule library
+6. Run package-driven pre-install rules using the rule-map selector
+7. Refresh package indexes after pre-install rules
+8. For each package, check if CLI is already available; if yes, skip package-manager install
+9. Install only unresolved packages via the platform's package manager
+10. Log progress with `succeeded/skipped/failed` summary
 
 ### Invocation
 
@@ -51,14 +55,14 @@ pwsh script/install.ps1
 `packages/pre-install-unix.sh` uses a package rule dispatcher:
 - `install.sh` iterates parsed packages and calls `run_pre_install_for_package`
 - `run_pre_install_for_package` resolves handlers via `PREINSTALL_RULE_MAP` (`pkg:handler`)
-- Built-in rule: `neovim` -> rule function triggers when `PKG_MANAGER` is `apt`; installs Neovim tarball into `~/.local/opt/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: host `~/.local/bin/nvim`, container `/usr/local/bin/nvim`) (idempotent)
-- Built-in rule: `starship` -> rule function triggers only when `IS_CONTAINER=1`; downloads and runs official installer (`https://starship.rs/install.sh`) to install latest binary into `INSTALL_BIN_DIR` (defaults: container `/usr/local/bin`)
+- Built-in rule: `neovim` -> rule function triggers when `PKG_MANAGER` is `apt`; installs the Neovim tarball into `INSTALL_OPT_DIR/neovim` and links `INSTALL_BIN_DIR/nvim` (defaults: `/usr/local/opt/neovim` and `/usr/local/bin/nvim`) (idempotent)
+- Built-in rule: `starship` -> rule function triggers when `PLATFORM` is `linux`; downloads and runs the official installer (`https://starship.rs/install.sh`) to install the latest binary into `INSTALL_BIN_DIR` (default: `/usr/local/bin`)
 - If rule conditions are not met, pre-install returns without installing and `install.sh` falls back to package-manager install
 - After rules run, package indexes are refreshed
 - Consistent log prefix format: `[pre-install:<manager>]`
 
 `packages/pre-install-unix.sh` should not call `misc.sh`; it relies on context provided by `install.sh`.
-`install.sh` provides `INSTALL_BIN_DIR` for binary link targets (default: host `~/.local/bin`, container `/usr/local/bin`) and prepends it to `PATH` for the current install process.
+`install.sh` provides `INSTALL_BIN_DIR` for command entrypoints and `INSTALL_OPT_DIR` for directory-based manual installs, then prepends `INSTALL_BIN_DIR` to `PATH` for the current install process.
 
 ### Strict vs Non-Strict
 
