@@ -9,9 +9,16 @@ This repository separates two concerns:
 - Software installation is driven by `packages/packages.list` for host machines and `packages/container.list` for container environments.
 - Dotfile deployment is driven by `.dotter/global.toml`, `.dotter/unix.toml`, `.dotter/windows.toml`, and your local `.dotter/local.toml`.
 
-The default workflow is still `bootstrap -> install -> stow -> post`, with `just` orchestrating the install and deploy steps.
+The default user workflow is `bootstrap -> install -> stow -> post`.
 
-## Quick Start
+- `bootstrap` runs the platform-specific script under `bootstrap/` and prepares `just` and `dotter`.
+- `install` runs the platform-specific script under `script/`.
+- `stow` deploys config from `packages/` through Dotter.
+- `post` runs post-deployment scripts from `packages/post/`.
+
+The install stage is maintained as `pre-install -> install` across platforms. `pre-install` handles preparation, manual install paths, and exceptional cases where the package manager is not sufficient, while the package-manager install phase skips tools that are already satisfied and stays focused on normal package installs.
+
+## Guide
 
 ### 1. Bootstrap
 
@@ -47,14 +54,6 @@ includes = [".dotter/windows.toml"]
 packages = ["git", "nvim", "starship", "powershell"]
 ```
 
-When the `alacritty` package is enabled on Windows, the repo also deploys an explicit WSL entrypoint profile at `%APPDATA%\Alacritty\ubuntu-20_04.toml`. Launch it with:
-
-```powershell
-alacritty --config-file "$env:APPDATA\Alacritty\ubuntu-20_04.toml"
-```
-
-That profile imports the shared `alacritty.toml`, opens `Ubuntu-20.04`, and starts in `/home`.
-
 ### 3. Install and Deploy
 
 **All-in-one setup:**
@@ -80,6 +79,9 @@ just post           # Run post-install scripts from packages/post/
 just uninstall
 ```
 
+## Shell shortcut
+
+
 ## Maintained Config Packages
 
 These are the config packages currently maintained in this repository and referenced by `.dotter/*.toml`:
@@ -103,88 +105,11 @@ The package lists under `packages/` are broader than the maintained config packa
 
 In other words: `packages/*.list` decides what software gets installed, while `.dotter/local.toml` decides which repo-managed configs get deployed.
 
-## Architecture
-
-### Tools
-
-- **`just`**: task runner for `install`, `stow`, `post`, and combined workflows
-- **`dotter`**: dotfile manager used for deployment and undeployment
-- **Platform package managers**:
-  - Windows: Scoop is the package-manager path implemented by `script/install.ps1`
-  - macOS: Homebrew
-  - Linux: `apt`, `dnf`, or `pacman`
-- **Bootstrap `just` fallback**: Linux bootstrap installs `just` via the package manager first, and falls back to the official installer into `INSTALL_BIN_DIR` (default: `/usr/local/bin`) only when the package manager does not provide a `just` package
-- **Unix pre-install hooks**: `packages/pre-install-unix.sh` can install newer binaries before package-manager fallback when needed. `script/install.sh` provides `INSTALL_BIN_DIR` (default: `/usr/local/bin`) for command entrypoints and `INSTALL_OPT_DIR` (default: `/usr/local/opt`) for directory-based manual installs such as the Neovim tarball.
-
-### Workflow
-
-```text
-1. Bootstrap -> install just, fetch dotter, seed .dotter/local.toml
-2. Install   -> parse packages/packages.list or packages/container.list
-3. Stow      -> deploy selected config packages via dotter
-4. Post      -> run scripts from packages/post/ after links are in place
-```
-
-### Directory Structure
-
-```text
-├── justfile
-├── .dotter/
-│   ├── global.toml
-│   ├── unix.toml
-│   ├── windows.toml
-│   ├── default/
-│   │   ├── unix.toml
-│   │   ├── windows.toml
-│   │   └── container.toml
-│   └── CLAUDE.md
-├── bootstrap/
-│   ├── bootstrap.sh
-│   ├── bootstrap.ps1
-│   └── CLAUDE.md
-├── script/
-│   ├── install.sh
-│   ├── install.ps1
-│   ├── misc.sh
-│   ├── post.sh
-│   ├── post.ps1
-│   └── CLAUDE.md
-├── packages/
-│   ├── packages.list
-│   ├── container.list
-│   ├── pre-install-unix.sh
-│   ├── post/
-│   ├── git/
-│   ├── nvim/
-│   ├── powershell/
-│   ├── starship/
-│   ├── tmux/
-│   └── zsh/
-├── test/
-│   └── devcontainer/
-└── README.md
-```
-
 ## Design Principles
 
 1. **Idempotency**: bootstrap, install, deploy, and post steps should be safe to rerun.
 2. **Platform awareness**: scripts detect platform and container context before acting.
 3. **Separation of concerns**: install lists decide software; dotter profiles decide deployed config.
-
-## Force Mode
-
-- `just install-force`: strict install mode on Unix
-- `just stow-force`: deploy while overwriting conflicts
-- `just up-force`: run `install-force -> stow-force -> post`
-
-## Documentation
-
-- `.dotter/CLAUDE.md` - dotter configuration guide
-- `bootstrap/CLAUDE.md` - bootstrap implementation notes
-- `script/CLAUDE.md` - install and post orchestration notes
-- `packages/zsh/README.md` - zsh profile details
-- `packages/powershell/README.md` - PowerShell profile details
-- `packages/tmux/README.md` - tmux configuration details
 
 ## License
 
