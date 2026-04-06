@@ -108,10 +108,10 @@ function Ensure-ScoopBucket {
     param([string]$Bucket)
     $known = scoop bucket list 2>&1 | Select-String -Pattern "^\s*$Bucket\s" -Quiet
     if (-not $known) {
-        Write-Host "[install] Adding scoop bucket: $Bucket"
+        Write-Host "[pre-install:scoop] Adding scoop bucket: $Bucket"
         scoop bucket add $Bucket
     } else {
-        Write-Host "[install] Scoop bucket already added: $Bucket"
+        Write-Host "[pre-install:scoop] Scoop bucket already added: $Bucket"
     }
 }
 
@@ -133,9 +133,15 @@ function Install-ScoopPackage {
     return $true
 }
 
+function Run-PreInstall {
+    Write-Host "[install] Running pre-install steps..."
+    Ensure-ScoopBucket "extras"
+    Write-Host "[pre-install:scoop] Pre-install complete"
+}
+
 # --- Main logic ---
 
-Ensure-ScoopBucket "extras"
+Run-PreInstall
 
 $packages = @(Parse-Packages)
 Write-Host "[install] Installing $($packages.Count) package(s)..."
