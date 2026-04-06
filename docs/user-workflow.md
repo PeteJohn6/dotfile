@@ -57,6 +57,8 @@ Bootstrap prepares the minimum runtime needed to use the repo:
 
 Bootstrap does not install the full toolchain.
 
+For ephemeral Unix environments such as CI jobs and Docker builds, the root-level `bootstrap-up.sh` wrapper is available as a convenience entrypoint. It runs bootstrap first and then `just up` without changing the underlying `bootstrap -> install -> stow -> post` stage model.
+
 ### 2. Install
 
 `just install` resolves software packages for the current runtime:

@@ -28,6 +28,7 @@ When writing complex features or significant refactors, use an ExecPlan (as desc
 | Path | Relationship to user-workflow | Responsibility | Primary doc |
 | --- | --- | --- | --- |
 | `README.md` | Directly involved in user-workflow | Human quick-start and command guide | [docs/user-workflow.md](docs/user-workflow.md) |
+| `bootstrap-up.sh` | Directly involved in user-workflow | Ephemeral Unix convenience entrypoint that composes bootstrap and `just up` for CI or Docker usage | [docs/user-workflow.md](docs/user-workflow.md) |
 | `justfile` | Directly involved in user-workflow | Stable command surface for install, deploy, preview, post-install, and teardown | [docs/user-workflow.md](docs/user-workflow.md) |
 | `bootstrap/` | Directly involved in user-workflow | Bootstrap entrypoints behind the user-workflow model | [docs/user-workflow.md](docs/user-workflow.md) |
 | `script/` | Directly involved in user-workflow | Install and post-install orchestration behind the user-workflow model | [docs/user-workflow.md](docs/user-workflow.md) |
@@ -40,7 +41,7 @@ When writing complex features or significant refactors, use an ExecPlan (as desc
 
 ## User Workflow
 
-`bootstrap -> install -> stow -> post` is the user-facing logical interface of this repo and the primary maintained model behind repository changes. `bootstrap/` provides the platform bootstrap entrypoints, and `justfile` is the stable orchestration surface for the remaining stages. `install` runs the platform install script and is maintained as `pre-install -> install`, where pre-install handles preparation, manual paths, and exceptional cases before the package-manager install pass. `stow` deploys config from `packages/` through Dotter, and `post` runs post-deployment setup scripts. It is not the maintainer workflow.
+`bootstrap -> install -> stow -> post` is the user-facing logical interface of this repo and the primary maintained model behind repository changes. `bootstrap/` provides the platform bootstrap entrypoints, `bootstrap-up.sh` is the Unix convenience wrapper for ephemeral CI or Docker runs, and `justfile` is the stable orchestration surface for the remaining stages. `install` runs the platform install script and is maintained as `pre-install -> install`, where pre-install handles preparation, manual paths, and exceptional cases before the package-manager install pass. `stow` deploys config from `packages/` through Dotter, and `post` runs post-deployment setup scripts. It is not the maintainer workflow.
 
 Read [docs/user-workflow.md](docs/user-workflow.md) for the maintained contract, execution model, stage model, and user-facing guarantees.
 

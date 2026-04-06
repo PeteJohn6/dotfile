@@ -29,10 +29,17 @@ Bootstrap prepares the repo for your platform, installs `just`, fetches `dotter`
 ./bootstrap/bootstrap.sh
 ```
 
+**Linux/macOS CI / Docker one-shot setup:**
+```bash
+bash bootstrap-up.sh
+```
+
 **Windows (PowerShell):**
 ```powershell
 .\bootstrap\bootstrap.ps1
 ```
+
+`bootstrap-up.sh` is a root-level convenience entrypoint for ephemeral Unix environments. It runs `bootstrap/bootstrap.sh` and then `just up` in the same process so CI jobs and Docker builds can provision the repo with a single command.
 
 ### 2. Configure
 
@@ -59,6 +66,11 @@ packages = ["git", "nvim", "starship", "powershell"]
 **All-in-one setup:**
 ```bash
 just up
+```
+
+**One command for CI / Docker:**
+```bash
+bash bootstrap-up.sh
 ```
 
 **Step-by-step:**
