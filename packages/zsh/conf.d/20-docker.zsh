@@ -152,7 +152,7 @@ dockerfexec() {
 _docker_completion_needs_regen() {
   local completion_file="$1"
   local now age_days
-  local -A file_stat
+  local -a file_stat
 
   [[ -f "$completion_file" ]] || return 0
 
@@ -165,7 +165,7 @@ _docker_completion_needs_regen() {
   fi
   [[ -z "$now" ]] && return 0
 
-  age_days=$(( (now - file_stat[mtime]) / 86400 ))
+  age_days=$(( (now - file_stat[1]) / 86400 ))
   (( age_days > 30 ))
 }
 
