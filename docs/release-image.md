@@ -15,11 +15,19 @@ The Ubuntu release image is published as:
 
     ghcr.io/petejohn6/ubuntu-dotfile
 
-The default-branch publish job updates:
+Every branch `push` publish job updates the branch tag:
+
+    ghcr.io/petejohn6/ubuntu-dotfile:<branch-name>
+
+For example, pushing branch `ci-image-release-contract` publishes:
+
+    ghcr.io/petejohn6/ubuntu-dotfile:ci-image-release-contract
+
+The default-branch publish job also updates:
 
     ghcr.io/petejohn6/ubuntu-dotfile:latest
 
-That tag is published as a multi-architecture image for `linux/amd64` and `linux/arm64`. The `linux/arm64` variant is intended for Linux container runtimes on Apple Silicon Macs and other ARM64 hosts.
+Published tags are multi-architecture images for `linux/amd64` and `linux/arm64`. The `linux/arm64` variant is intended for Linux container runtimes on Apple Silicon Macs and other ARM64 hosts.
 
 ## Local Build
 
@@ -38,5 +46,6 @@ The final image is a runtime artifact, not a repo-debug image. It does not prese
 `.github/workflows/ubuntu-dotfile.yml` is the release workflow for this image.
 
 - Pull requests that touch image-affecting inputs such as `.dotter/**`, `packages/**`, `bootstrap/**`, `script/**`, `justfile`, `bootstrap-up.sh`, `.dockerignore`, or `ci/image/**` build the image but do not publish it.
-- Pushes to the default branch that touch those same inputs build and publish `ghcr.io/petejohn6/ubuntu-dotfile:latest` to GHCR.
-- Manual workflow dispatch is available for branch-local validation, but it does not publish or move the `latest` tag.
+- Pushes to any branch that touch those same inputs build and publish a branch tag such as `ghcr.io/petejohn6/ubuntu-dotfile:ci-image-release-contract`.
+- Pushes to the default branch publish both the branch tag and `ghcr.io/petejohn6/ubuntu-dotfile:latest`.
+- Manual workflow dispatch is available for branch-local validation, but it does not publish images.

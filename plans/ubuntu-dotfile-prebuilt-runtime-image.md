@@ -18,6 +18,7 @@ After this change, the published Ubuntu image is a real runtime artifact, not ju
 - [x] (2026-04-10T06:42:17+08:00) Added the missing release-image implementation files: root `.dockerignore`, `ci/image/Dockerfile`, and `ci/image/finalize-image.sh`.
 - [x] (2026-04-10T06:42:17+08:00) Updated user-facing and maintainer-facing docs so they describe release-image finalization rather than claiming that generic container `stow` always materializes symlinks.
 - [x] (2026-04-10T06:42:17+08:00) Ran static validation with Linux `bash -n` inside a temporary Ubuntu container, built `ci/image/Dockerfile` locally, and verified that `/root/.zshrc`, `/root/.config/nvim/init.lua`, and `/root/.gitconfig` are ordinary files while `/workspace` is absent in the final runtime image.
+- [x] (2026-04-10T07:35:00+08:00) Revised the release workflow so branch pushes publish branch-specific GHCR tags, enabling end-to-end validation of the GitHub-hosted prebuilt image before merging to the default branch.
 
 ## Surprises & Discoveries
 
@@ -31,6 +32,8 @@ After this change, the published Ubuntu image is a real runtime artifact, not ju
   Evidence: after the first successful finalization pass, a validation container showed `/workspace` as an empty directory until the Dockerfile's final `WORKDIR` was changed to `/root`.
 - Observation: the host's default `bash.exe` path was a Windows-to-WSL launcher that could not be used for local syntax checks in this session.
   Evidence: local `bash -n` returned a `Bash/Service/CreateInstance/E_ACCESSDENIED` error, while the same syntax checks passed inside `docker run ubuntu:24.04 bash -n ...`.
+- Observation: the first version of the workflow only generated `latest` on the default branch, so branch pushes built successfully but emitted no tags and could not publish a pullable GHCR artifact for branch-level verification.
+  Evidence: the successful branch run reported `No Docker tag has been generated. Check tags input.` and skipped GHCR login because publish was default-branch-only.
 
 ## Decision Log
 
@@ -49,10 +52,13 @@ After this change, the published Ubuntu image is a real runtime artifact, not ju
 - Decision: set the final image `WORKDIR` to `/root` after the build completes.
   Rationale: otherwise Docker recreates `/workspace` at runtime even if the finalization step deleted it during the image build.
   Date/Author: 2026-04-10 / Codex
+- Decision: publish branch-specific tags on every branch `push`, while keeping `latest` reserved for the default branch.
+  Rationale: that enables testing the actual GitHub-built prebuilt image from a feature branch without weakening the meaning of `latest`.
+  Date/Author: 2026-04-10 / Codex
 
 ## Outcomes & Retrospective
 
-The repository now contains a concrete implementation for the release image that matches the documented intent: build-time provisioning plus runtime-safe deployed files. Local validation proved the full image build, the Linux shell syntax checks, and the final runtime filesystem assertions. The main lesson was that the contract drift was not caused by an incorrect Dockerfile, but by the absence of the implementation files that the surrounding docs and workflow already assumed existed.
+The repository now contains a concrete implementation for the release image that matches the documented intent: build-time provisioning plus runtime-safe deployed files. Local validation proved the full image build, the Linux shell syntax checks, and the final runtime filesystem assertions. The release workflow was then extended so branch pushes publish branch tags in GHCR, which makes it possible to validate the GitHub-built prebuilt image before merging. The main lesson was that the contract drift was not caused by an incorrect Dockerfile, but by the absence of the implementation files and publishing rules that the surrounding docs and workflow contract needed.
 
 ## Context and Orientation
 

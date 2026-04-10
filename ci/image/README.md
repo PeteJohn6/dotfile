@@ -20,8 +20,12 @@ GitHub Actions publishes this image to:
 
     ghcr.io/petejohn6/ubuntu-dotfile
 
-The default-branch release workflow publishes:
+Branch pushes publish a branch tag such as:
+
+    ghcr.io/petejohn6/ubuntu-dotfile:ci-image-release-contract
+
+The default-branch release workflow also publishes:
 
     ghcr.io/petejohn6/ubuntu-dotfile:latest
 
-That tag is a multi-architecture image for `linux/amd64` and `linux/arm64`.
+Published tags are multi-architecture images for `linux/amd64` and `linux/arm64`.
