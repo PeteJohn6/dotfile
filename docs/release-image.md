@@ -45,7 +45,11 @@ The final image is a runtime artifact, not a repo-debug image. It does not prese
 
 `.github/workflows/ubuntu-dotfile.yml` is the release workflow for this image.
 
-- Pull requests that touch image-affecting inputs such as `.dotter/**`, `packages/**`, `bootstrap/**`, `script/**`, `justfile`, `bootstrap-up.sh`, `.dockerignore`, or `ci/image/**` build the image but do not publish it.
-- Pushes to any branch that touch those same inputs build and publish a branch tag such as `ghcr.io/petejohn6/ubuntu-dotfile:ci-image-release-contract`.
+- The workflow now triggers on every `pull_request`, `push`, and manual dispatch, then classifies changed files before deciding whether to build the image.
+- `hack/user_workflow_changed.sh` and `hack/dotfile_image_inputs_changed.sh` are the reusable classifiers for supporting jobs. Each script accepts a source mode: `workspace` compares the working tree against `HEAD`, and `head` compares `HEAD` against `HEAD^1`.
+- `user_workflow_changed` becomes `true` when the selected diff source touches `.dotter/**`, `bootstrap/**`, `bootstrap-up.sh`, `justfile`, `packages/**`, or `script/**`.
+- `dotfile_image_inputs_changed` becomes `true` when the selected diff source touches any of the user-workflow inputs above, plus `.dockerignore`, `ci/image/**`, or `.github/workflows/ubuntu-dotfile.yml`.
+- Pull requests that set `dotfile_image_inputs_changed=true` build the image but do not publish it.
+- Pushes to any branch that set `dotfile_image_inputs_changed=true` build and publish a branch tag such as `ghcr.io/petejohn6/ubuntu-dotfile:ci-image-release-contract`.
 - Pushes to the default branch publish both the branch tag and `ghcr.io/petejohn6/ubuntu-dotfile:latest`.
-- Manual workflow dispatch is available for branch-local validation, but it does not publish images.
+- Manual workflow dispatch bypasses diff classification and always runs the image build for branch-local validation, but it does not publish images.

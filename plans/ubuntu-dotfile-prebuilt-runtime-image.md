@@ -19,6 +19,7 @@ After this change, the published Ubuntu image is a real runtime artifact, not ju
 - [x] (2026-04-10T06:42:17+08:00) Updated user-facing and maintainer-facing docs so they describe release-image finalization rather than claiming that generic container `stow` always materializes symlinks.
 - [x] (2026-04-10T06:42:17+08:00) Ran static validation with Linux `bash -n` inside a temporary Ubuntu container, built `ci/image/Dockerfile` locally, and verified that `/root/.zshrc`, `/root/.config/nvim/init.lua`, and `/root/.gitconfig` are ordinary files while `/workspace` is absent in the final runtime image.
 - [x] (2026-04-10T07:35:00+08:00) Revised the release workflow so branch pushes publish branch-specific GHCR tags, enabling end-to-end validation of the GitHub-hosted prebuilt image before merging to the default branch.
+- [x] (2026-04-10T11:20:00+08:00) Replaced the workflow-level hard-coded `paths` trigger with a reusable changed-file classifier under `hack/`, then rewired the image job to consume that shared output.
 
 ## Surprises & Discoveries
 
@@ -34,6 +35,8 @@ After this change, the published Ubuntu image is a real runtime artifact, not ju
   Evidence: local `bash -n` returned a `Bash/Service/CreateInstance/E_ACCESSDENIED` error, while the same syntax checks passed inside `docker run ubuntu:24.04 bash -n ...`.
 - Observation: the first version of the workflow only generated `latest` on the default branch, so branch pushes built successfully but emitted no tags and could not publish a pullable GHCR artifact for branch-level verification.
   Evidence: the successful branch run reported `No Docker tag has been generated. Check tags input.` and skipped GHCR login because publish was default-branch-only.
+- Observation: the release workflow duplicated the image input surface directly in `on.paths`, which made the trigger logic hard to reuse and easy to let drift away from the maintained user-workflow input set.
+  Evidence: `.github/workflows/ubuntu-dotfile.yml` hard-coded `.dotter/**`, `bootstrap/**`, `bootstrap-up.sh`, `justfile`, `packages/**`, and `script/**` inline before the classifier script existed.
 
 ## Decision Log
 
@@ -55,10 +58,13 @@ After this change, the published Ubuntu image is a real runtime artifact, not ju
 - Decision: publish branch-specific tags on every branch `push`, while keeping `latest` reserved for the default branch.
   Rationale: that enables testing the actual GitHub-built prebuilt image from a feature branch without weakening the meaning of `latest`.
   Date/Author: 2026-04-10 / Codex
+- Decision: split changed-file classification into `hack/user_workflow_changed.sh` and `hack/dotfile_image_inputs_changed.sh`, and make both scripts accept an explicit source mode.
+  Rationale: supporting checks now call the classifier that matches the question they are asking, while the same scripts can handle both working-tree validation (`workspace`) and commit-based CI validation (`head`).
+  Date/Author: 2026-04-10 / Codex
 
 ## Outcomes & Retrospective
 
-The repository now contains a concrete implementation for the release image that matches the documented intent: build-time provisioning plus runtime-safe deployed files. Local validation proved the full image build, the Linux shell syntax checks, and the final runtime filesystem assertions. The release workflow was then extended so branch pushes publish branch tags in GHCR, which makes it possible to validate the GitHub-built prebuilt image before merging. The main lesson was that the contract drift was not caused by an incorrect Dockerfile, but by the absence of the implementation files and publishing rules that the surrounding docs and workflow contract needed.
+The repository now contains a concrete implementation for the release image that matches the documented intent: build-time provisioning plus runtime-safe deployed files. Local validation proved the full image build, the Linux shell syntax checks, and the final runtime filesystem assertions. The release workflow was then extended so branch pushes publish branch tags in GHCR, which makes it possible to validate the GitHub-built prebuilt image before merging. The workflow trigger model now also routes all path classification through two reusable scripts in `hack/`, so the image input contract is reusable instead of being duplicated inside GitHub Actions YAML. The main lesson was that the contract drift was not caused by an incorrect Dockerfile, but by the absence of the implementation files and publishing rules that the surrounding docs and workflow contract needed.
 
 ## Context and Orientation
 
@@ -68,6 +74,8 @@ The release artifact is centered in three places. `.github/workflows/ubuntu-dotf
 
 The release image therefore needs one extra step after `just up` completes. That step must scan the deployed files in the container home directory, find the symbolic links that still point back into the build workspace, replace them with ordinary copied files or directories, and only then remove the workspace. This must happen only for the release image build, not for the general `stow` implementation.
 
+The release workflow also needs a stable way to answer two questions from the repository state: "did a user-workflow implementation input change?" and "did any release-image build input change?" Those answers now live in `hack/user_workflow_changed.sh` and `hack/dotfile_image_inputs_changed.sh`. Each script accepts a source mode: `workspace` compares the working tree against `HEAD`, including untracked files, and `head` compares `HEAD` against `HEAD^1`, falling back to a root-commit diff when `HEAD` has no parent.
+
 ## Plan of Work
 
 Create the root `.dockerignore` so the repository-root build context excludes host-local state and obviously irrelevant directories such as `.git/`, `.tree/`, `test/`, `docs/`, and `plans/`, while keeping the actual workflow inputs in scope. Add `ci/image/Dockerfile` as the release-image build entrypoint. Use `ubuntu:24.04`, set the shell to `bash` with `pipefail`, set `container=docker` so the existing scripts select the container install list, copy the workflow inputs into `/workspace`, run `bash bootstrap-up.sh`, and then run a new `ci/image/finalize-image.sh`.
@@ -75,6 +83,8 @@ Create the root `.dockerignore` so the repository-root build context excludes ho
 Implement `ci/image/finalize-image.sh` so it is narrow and explicit. It must search under `$HOME` for symbolic links whose resolved targets are inside `/workspace`, replace each one in place with a copied ordinary file or directory, verify that no such repository-backed links remain, and then delete `/workspace`. The script should refuse to delete an empty or root-like path and should print concise status messages that show what it materialized.
 
 Update `README.md`, `docs/release-image.md`, and `ci/image/README.md` so they describe the actual implementation. The user-facing statement should be that normal Unix `stow` still deploys symbolic links, while the published Ubuntu image runs a finalization step during `docker build` that converts the deployed Dotter outputs into ordinary files for runtime use.
+
+Replace the workflow-level hard-coded `on.paths` list in `.github/workflows/ubuntu-dotfile.yml` with a small change-detection job that always runs first and invokes the new scripts with `head` mode. The workflow should build the image only when `dotfile_image_inputs_changed=true`, while still allowing `workflow_dispatch` to run unconditionally.
 
 ## Concrete Steps
 
@@ -89,15 +99,29 @@ From the repository root:
 
        shellcheck bootstrap-up.sh ci/image/finalize-image.sh
 
-7. Build the image locally:
+7. Add `hack/user_workflow_changed.sh` and `hack/dotfile_image_inputs_changed.sh`, update `.github/workflows/ubuntu-dotfile.yml`, and validate the new classifiers:
+
+       bash -n hack/user_workflow_changed.sh
+       bash -n hack/dotfile_image_inputs_changed.sh
+       shellcheck hack/user_workflow_changed.sh hack/dotfile_image_inputs_changed.sh
+       bash hack/user_workflow_changed.sh workspace
+       bash hack/dotfile_image_inputs_changed.sh workspace
+       bash hack/user_workflow_changed.sh head
+       bash hack/dotfile_image_inputs_changed.sh head
+
+8. Validate the workflow syntax:
+
+       actionlint .github/workflows/ubuntu-dotfile.yml
+
+9. Build the image locally:
 
        docker build -f ci/image/Dockerfile -t ubuntu-dotfile:local .
 
-8. Prove the final image no longer depends on `/workspace`:
+10. Prove the final image no longer depends on `/workspace`:
 
        docker run --rm ubuntu-dotfile:local bash -lc 'test -f ~/.zshrc && test ! -L ~/.zshrc && test -f ~/.config/nvim/init.lua && test ! -L ~/.config/nvim/init.lua && test ! -e /workspace'
 
-9. Run the broader Unix workflow proof through the repository devcontainer:
+11. Run the broader Unix workflow proof through the repository devcontainer:
 
        devcontainer up --workspace-folder . --config test/devcontainer/devcontainer.json --remove-existing-container
        devcontainer exec --workspace-folder . --config test/devcontainer/devcontainer.json bash -lc 'cd /workspace && bash bootstrap/bootstrap.sh'
@@ -106,6 +130,8 @@ From the repository root:
 ## Validation and Acceptance
 
 Acceptance for the release image is behavioral. A successful local build of `ci/image/Dockerfile` must complete `bootstrap-up.sh` during `docker build`, and a container started from that image must contain deployed dotfiles under `/root` as ordinary files and directories rather than symlinks into `/workspace`. The final image must not retain `/workspace`.
+
+Acceptance for the workflow trigger model is behavioral too. Running `hack/user_workflow_changed.sh workspace` and `hack/dotfile_image_inputs_changed.sh workspace` in a clean tree must print `false`, while edits to user-workflow paths must make both scripts print `true`, and edits limited to image-only inputs such as `ci/image/Dockerfile` must make only `hack/dotfile_image_inputs_changed.sh` print `true`. Running the same scripts in `head` mode must classify the last commit using the same path rules. `.github/workflows/ubuntu-dotfile.yml` must always start, but only the image build job should run when `dotfile_image_inputs_changed=true` or when the workflow is dispatched manually.
 
 Acceptance for the wider repository contract is that the usual Unix workflow still works when exercised through the disposable devcontainer environment described by `test/devcontainer/devcontainer.json`. The release-image finalization logic must not be required for normal `just up` execution in that validation surface.
 
@@ -130,3 +156,4 @@ The implementation depends on the existing Unix workflow interfaces that must re
 - `ci/image/finalize-image.sh` is a release-image-only helper and must not be treated as part of generic `stow`.
 
 Revision note: initial checked-in version created to bring the missing release-image implementation in line with the already documented repository contract.
+Revision note: updated on 2026-04-10 to replace the workflow's hard-coded `paths` trigger with reusable `hack/` classifiers for `workspace` and `head` diff modes, keeping the release-image input rules in one shared automation surface.
