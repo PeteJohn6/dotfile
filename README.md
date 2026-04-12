@@ -44,6 +44,7 @@ bash bootstrap-up.sh
 ### 2. Configure
 
 Bootstrap creates `.dotter/local.toml` from `.dotter/default/unix.toml`, `.dotter/default/windows.toml`, or `.dotter/default/container.toml`.
+Fresh container environments use `.dotter/default/container.toml` as the forward template for container-local package selection.
 
 Edit `.dotter/local.toml` to choose which maintained config packages are deployed:
 
@@ -84,6 +85,7 @@ just post           # Run post-install scripts from packages/post/
 ```
 
 `just stow` is safe to re-run. Dotter reconciles deployed targets using `.dotter/cache.toml`, so normal redeploys should not require `just uninstall` first.
+On Unix machines, including normal containerized workspaces, the default deployment type remains symbolic links. The published Ubuntu release image is a separate runtime artifact: its Docker build runs a finalization step after `bootstrap-up.sh` that materializes repo-backed Dotter symlinks into ordinary files before the image is published. See `docs/release-image.md` for that image-specific contract.
 
 ### 4. Remove Deployed Dotfiles
 

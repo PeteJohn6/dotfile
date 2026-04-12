@@ -28,6 +28,8 @@ These top-level paths are directly involved in user-workflow, even though mainta
 These top-level paths are not directly involved in user-workflow, but maintainers use them to document, validate, and plan changes to it:
 
 - `AGENTS.md`
+- `.github/`
+- `ci/`
 - `docs/`
 - `test/`
 - `plans/`
@@ -59,6 +61,7 @@ When changing `.dotter/` layout, Dotter merge rules, or the `justfile` implement
 | Install behavior | `install` | `script/`, `packages/`, `justfile`, `README.md` | narrow install proof first, then broader workflow proof if stage boundaries move |
 | Stow behavior | `stow` | `.dotter/`, `packages/`, `justfile`, `README.md` | read `docs/dotter-and-just.md`, then run dotter preview or targeted deploy proof |
 | Post-install behavior | `post` | `script/`, `packages/`, `justfile`, `README.md` | targeted post hook or composed workflow proof |
+| Release and CI infrastructure | supporting | `ci/`, `.github/`, `docs/`, `plans/` | validate the image build or workflow path directly, then run the broader workflow proof when Unix behavior could be affected |
 | Supporting docs and validation | supporting | `test/`, `docs/`, `plans/`, `.agents/` | validate the changed proof surface itself, then the affected runtime path if needed |
 | Command surface | multiple stages | `justfile`, `README.md`, `AGENTS.md`, `docs/` | validate the changed command path, use `docs/dotter-and-just.md` when stow-side commands changed, and update workflow docs in the same change |
 
