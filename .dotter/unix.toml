@@ -8,6 +8,9 @@
 "packages/alacritty/alacritty.toml.tmpl" = { type = "template", target = "~/.config/alacritty/alacritty.toml" }
 "packages/alacritty/themes" = { type = "symbolic", target = "~/.config/alacritty/themes" }
 
+[wezterm.files]
+"packages/wezterm" = "~/.config/wezterm"
+
 [zsh.files]
 "packages/zsh/.zshrc" = "~/.zshrc"
 "packages/zsh/conf.d" = "~/.config/zsh/conf.d"

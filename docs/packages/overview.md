@@ -81,3 +81,11 @@ Repo-managed config packages live under `packages/<name>/`. When adding or chang
 7. sync `README.md` and `docs/user-workflow.md` when the user-visible surface changes
 
 Treat package changes in terms of the user-workflow stage they affect: install, stow, or post.
+
+Current package guides:
+
+| Package | Guide |
+| --- | --- |
+| `nvim` | [nvim.md](nvim.md) |
+| `powershell` | [powershell.md](powershell.md) |
+| `wezterm` | [wezterm.md](wezterm.md) |

@@ -49,7 +49,7 @@ Edit `.dotter/local.toml` to choose which maintained config packages are deploye
 
 ```toml
 includes = [".dotter/unix.toml"]
-packages = ["git", "nvim", "zsh", "starship", "tmux", "alacritty"]
+packages = ["git", "nvim", "zsh", "starship", "tmux", "alacritty", "wezterm"]
 [variables]
 alacritty_working_directory = "/home/your-user"  # or C:/Users/your-user
 ```
@@ -58,7 +58,7 @@ Windows defaults to:
 
 ```toml
 includes = [".dotter/windows.toml"]
-packages = ["git", "nvim", "starship", "powershell"]
+packages = ["git", "nvim", "starship", "powershell", "alacritty", "wezterm"]
 ```
 
 ### 3. Install and Deploy
@@ -107,6 +107,7 @@ These are the config packages currently maintained in this repository and refere
 | `tmux` | Modular tmux config with TPM bootstrap in post-install | Linux, macOS |
 | `powershell` | Modular PowerShell profile and helper modules | Windows |
 | `alacritty` | Templated Alacritty config plus shared themes deployed to the platform config directory | Linux, macOS, Windows |
+| `wezterm` | Modular WezTerm config with imported theme, fallback font stack, and backdrop image system | Linux, macOS, Windows |
 
 ## Software Install Lists
 

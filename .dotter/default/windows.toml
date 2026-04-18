@@ -1,6 +1,6 @@
 # Windows local configuration (auto-copied by bootstrap)
 includes = [".dotter/windows.toml"]
-packages = ["git", "nvim", "starship", "powershell", "alacritty"]
+packages = ["git", "nvim", "starship", "powershell", "alacritty", "wezterm"]
 
 [variables]
 # Optional: set an absolute startup directory for Alacritty.

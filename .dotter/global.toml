@@ -27,3 +27,6 @@ depends = []
 
 [alacritty.variables]
 alacritty_working_directory = "None"
+
+[wezterm]
+depends = []
