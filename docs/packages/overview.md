@@ -86,6 +86,7 @@ Current package guides:
 
 | Package | Guide |
 | --- | --- |
+| `alacritty` | [alacritty.md](alacritty.md) |
 | `nvim` | [nvim.md](nvim.md) |
 | `powershell` | [powershell.md](powershell.md) |
 | `wezterm` | [wezterm.md](wezterm.md) |

@@ -13,7 +13,7 @@
 
 [alacritty.files]
 "packages/alacritty/alacritty.toml.tmpl" = { type = "template", target = "~/AppData/Roaming/Alacritty/alacritty.toml" }
-"packages/alacritty/ubuntu-20_04.toml" = "~/AppData/Roaming/Alacritty/ubuntu-20_04.toml"
+"packages/alacritty/wsl.toml" = "~/AppData/Roaming/Alacritty/wsl.toml"
 "packages/alacritty/themes" = { type = "symbolic", target = "~/AppData/Roaming/Alacritty/themes" }
 
 [wezterm.files]

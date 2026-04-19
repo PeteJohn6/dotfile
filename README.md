@@ -61,6 +61,8 @@ includes = [".dotter/windows.toml"]
 packages = ["git", "nvim", "starship", "powershell", "alacritty", "wezterm"]
 ```
 
+On Windows, Alacritty also deploys `wsl.toml`, a WSL profile that follows the current user's default distribution.
+
 ### 3. Install and Deploy
 
 **All-in-one setup:**
@@ -106,7 +108,7 @@ These are the config packages currently maintained in this repository and refere
 | `starship` | Shared Starship prompt symbols/config | Linux, macOS, Windows |
 | `tmux` | Modular tmux config with TPM bootstrap in post-install | Linux, macOS |
 | `powershell` | Modular PowerShell profile and helper modules | Windows |
-| `alacritty` | Templated Alacritty config plus shared themes deployed to the platform config directory | Linux, macOS, Windows |
+| `alacritty` | Templated Alacritty config, shared themes, and a Windows WSL profile that follows the user's default WSL distribution | Linux, macOS, Windows |
 | `wezterm` | Modular WezTerm config with imported theme, fallback font stack, and backdrop image system | Linux, macOS, Windows |
 
 ## Software Install Lists

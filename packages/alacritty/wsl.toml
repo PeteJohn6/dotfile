@@ -3,4 +3,4 @@ import = ["./alacritty.toml"]
 
 [terminal.shell]
 program = "wsl.exe"
-args = ["-d", "Ubuntu-20.04", "--cd", "/home"]
+args = ["-u", "root", "--cd", "/home", "zsh"]
