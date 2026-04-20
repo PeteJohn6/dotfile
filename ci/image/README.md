@@ -20,11 +20,11 @@ GitHub Actions publishes this image to:
 
     ghcr.io/petejohn6/ubuntu-dotfile
 
-Branch pushes publish a branch tag such as:
+`master` branch pushes publish:
 
-    ghcr.io/petejohn6/ubuntu-dotfile:ci-image-release-contract
+    ghcr.io/petejohn6/ubuntu-dotfile:master
 
-The default-branch release workflow also publishes:
+When `master` is the default branch, the release workflow also publishes:
 
     ghcr.io/petejohn6/ubuntu-dotfile:latest
 

@@ -3,6 +3,8 @@ name: Ubuntu Dotfile Image
 on:
   pull_request:
   push:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -14,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       user_workflow_changed: ${{ steps.classify.outputs.user_workflow_changed }}
-      dotfile_image_inputs_changed: ${{ steps.classify.outputs.dotfile_image_inputs_changed }}
+      user_workflow_container_changed: ${{ steps.classify.outputs.user_workflow_container_changed }}
+      dotfile_image_manifest_changed: ${{ steps.classify.outputs.dotfile_image_manifest_changed }}
 
     steps:
       - name: Check out repository
@@ -31,18 +34,31 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             {
               echo "user_workflow_changed=true"
-              echo "dotfile_image_inputs_changed=true"
+              echo "user_workflow_container_changed=true"
+              echo "dotfile_image_manifest_changed=true"
             } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          echo "user_workflow_changed=$(bash hack/user_workflow_changed.sh head)" >> "$GITHUB_OUTPUT"
-          echo "dotfile_image_inputs_changed=$(bash hack/dotfile_image_inputs_changed.sh head)" >> "$GITHUB_OUTPUT"
+          commit_range_args=()
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            commit_range_args=(--base "${{ github.event.before }}" --head "${{ github.sha }}")
+          fi
+
+          user_workflow_changed="$(python3 hack/change-detection/main.py --source commit "${commit_range_args[@]}" user_workflow)"
+          user_workflow_container_changed="$(python3 hack/change-detection/main.py --source commit "${commit_range_args[@]}" user_workflow_container)"
+          dotfile_image_manifest_changed="$(python3 hack/change-detection/main.py --source commit "${commit_range_args[@]}" dotfile_image_manifest)"
+
+          {
+            echo "user_workflow_changed=$user_workflow_changed"
+            echo "user_workflow_container_changed=$user_workflow_container_changed"
+            echo "dotfile_image_manifest_changed=$dotfile_image_manifest_changed"
+          } >> "$GITHUB_OUTPUT"
 
   ubuntu-dotfile:
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.dotfile_image_inputs_changed == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && needs.detect-changes.outputs.dotfile_image_manifest_changed == 'true') || (github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.detect-changes.outputs.dotfile_image_manifest_changed == 'true') }}
 
     steps:
       - name: Check out repository
