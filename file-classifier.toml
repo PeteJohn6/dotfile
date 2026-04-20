@@ -1,0 +1,40 @@
+[user_workflow]
+patterns = [
+  "justfile",
+  "bootstrap/**",
+  "bootstrap-up.sh",
+  "script/**",
+  "packages/**",
+  ".dotter/**",
+]
+
+[user_workflow_container]
+patterns = [
+  "justfile",
+  "bootstrap/bootstrap.sh",
+  "bootstrap-up.sh",
+  "script/install.sh",
+  "script/misc.sh",
+  "script/post.sh",
+  "packages/container.list",
+  "packages/pre-install-unix.sh",
+  ".dotter/global.toml",
+  ".dotter/unix.toml",
+  ".dotter/default/container.toml",
+  "packages/git/**",
+  "packages/nvim/**",
+  "packages/starship/**",
+  "packages/tmux/**",
+  "packages/zsh/**",
+  "packages/post/**",
+]
+
+[dotfile_image_manifest]
+includes = ["user_workflow_container"]
+patterns = [
+  "file-classifier.toml",
+  "hack/change-detection/main.py",
+  ".dockerignore",
+  "ci/image/**",
+  ".github/workflows/ubuntu-dotfile.yml",
+]

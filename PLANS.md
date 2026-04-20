@@ -10,6 +10,8 @@ When implementing an executable specification (ExecPlan), do not prompt the user
 
 When discussing an executable specification (ExecPlan), record decisions in a log in the spec for posterity; it should be unambiguously clear why any change to the specification was made. ExecPlans are living documents, and it should always be possible to restart from _only_ the ExecPlan and no other work.
 
+If a relevant checked-in ExecPlan already exists, it is a binding input to the work. Read it before planning or implementation, reconcile it with the current intended behavior, and update it before continuing with repo-tracked changes whenever scope, assumptions, or externally visible behavior change. Conversational plans, chat summaries, and other transient planning artifacts are not substitutes for a checked-in ExecPlan.
+
 When researching a design with challenging requirements or significant unknowns, use milestones to implement proof of concepts, "toy implementations", etc., that allow validating whether the user's proposal is feasible. Read the source code of libraries by finding or acquiring them, research deeply, and include prototypes to guide a fuller implementation.
 
 ## Requirements
@@ -18,6 +20,7 @@ NON-NEGOTIABLE REQUIREMENTS:
 
 - Every ExecPlan must be fully self-contained. Self-contained means that in its current form it contains all knowledge and instructions needed for a novice to succeed.
 - Every ExecPlan is a living document. Contributors are required to revise it as progress is made, as discoveries occur, and as design decisions are finalized. Each revision must remain fully self-contained.
+- Every ExecPlan must remain synchronized with the current intended behavior of the task. A stale or partially reconciled plan is non-compliant.
 - Every ExecPlan must enable a complete novice to implement the feature end-to-end without prior knowledge of this repo.
 - Every ExecPlan must produce a demonstrably working behavior, not merely code changes to "meet a definition".
 - Every ExecPlan must define every term of art in plain language or do not use it.
@@ -39,6 +42,8 @@ Write in plain prose. Prefer sentences over lists. Avoid checklists, tables, and
 Self-containment and plain language are paramount. If you introduce a phrase that is not ordinary English ("daemon", "middleware", "RPC gateway", "filter graph"), define it immediately and remind the reader how it manifests in this repository (for example, by naming the files or commands where it appears). Do not say "as defined previously" or "according to the architecture doc." Include the needed explanation here, even if you repeat yourself.
 
 Avoid common failure modes. Do not rely on undefined jargon. Do not describe "the letter of a feature" so narrowly that the resulting code compiles but does nothing meaningful. Do not outsource key decisions to the reader. When ambiguity exists, resolve it in the plan itself and explain why you chose that path. Err on the side of over-explaining user-visible effects and under-specifying incidental implementation details.
+
+Treat ExecPlan triggering as part of the work, not as separate paperwork. If the repo already contains a relevant plan, or if the task expands from a small change into work that alters a durable external contract, pause and reconcile the ExecPlan before continuing implementation.
 
 Anchor the plan with observable outcomes. State what the user can do after implementation, the commands to run, and the outputs they should see. Acceptance should be phrased as behavior a human can verify ("after starting the server, navigating to [http://localhost:8080/health](http://localhost:8080/health) returns HTTP 200 with body OK") rather than internal attributes ("added a HealthCheck struct"). If a change is internal, explain how its impact can still be demonstrated (for example, by running tests that fail before and pass after, and by showing a scenario that uses the new behavior).
 
@@ -63,6 +68,7 @@ Each milestone must be independently verifiable and incrementally implement the 
 - When you discover optimizer behavior, performance tradeoffs, unexpected bugs, or inverse/unapply semantics that shaped your approach, capture those observations in the `Surprises & Discoveries` section with short evidence snippets (test output is ideal).
 - If you change course mid-implementation, document why in the `Decision Log` and reflect the implications in `Progress`. Plans are guides for the next contributor as much as checklists for you.
 - At completion of a major task or the full plan, write an `Outcomes & Retrospective` entry summarizing what was achieved, what remains, and lessons learned.
+- If a relevant checked-in plan already exists, update that plan before continuing implementation after any material scope, contract, or validation change.
 
 # Prototyping milestones and parallel implementations
 
@@ -78,6 +84,10 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 This ExecPlan is a living document. The sections `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work proceeds.
 
 If PLANS.md file is checked into the repo, reference the path to that file here from the repository root and note that this document must be maintained in accordance with PLANS.md.
+
+## Trigger / Why This Needs an ExecPlan
+
+State explicitly why this task requires an ExecPlan. If you are revising an existing checked-in plan, say that here and summarize what changed in the intended behavior or scope.
 
 ## Purpose / Big Picture
 
