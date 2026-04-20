@@ -46,9 +46,11 @@ A chat plan or other transient discussion does not satisfy the ExecPlan requirem
 | `script/` | Directly involved in user-workflow | Install and post-install orchestration behind the user-workflow model | [docs/user-workflow.md](docs/user-workflow.md) |
 | `packages/` | Directly involved in user-workflow | Package lists, hooks, and maintained configs used during install, stow, and post | [docs/maintainer-workflow.md](docs/maintainer-workflow.md) |
 | `.dotter/` | Directly involved in user-workflow + local state | Deployment model, seeded defaults, and machine-local deployment state behind stow | [docs/maintainer-workflow.md](docs/maintainer-workflow.md) |
+| `file-classifier.toml` | Not directly involved in user-workflow | Repository-root watched-path facts for changed-file classification | [docs/release-image.md](docs/release-image.md) |
 | `.github/` | Not directly involved in user-workflow | GitHub Actions workflow definitions for repository automation and release jobs | [docs/release-image.md](docs/release-image.md) |
 | `ci/` | Not directly involved in user-workflow | Build inputs for repository-maintained release images and CI-owned container assets | [docs/release-image.md](docs/release-image.md) |
 | `docs/` | Not directly involved in user-workflow | Durable architecture, reference, and package docs | [docs/maintainer-workflow.md](docs/maintainer-workflow.md) |
+| `hack/` | Not directly involved in user-workflow | Reusable maintainer automation, including changed-file classifier tooling | [docs/maintainer-workflow.md](docs/maintainer-workflow.md) |
 | `test/` | Not directly involved in user-workflow | Validation environments and test assets | [docs/maintainer-workflow.md](docs/maintainer-workflow.md) |
 | `plans/` | Not directly involved in user-workflow | Execution plans and planning artifacts | [PLANS.md](PLANS.md) |
 | `.agents/` | Not directly involved in user-workflow | Agent-side skills and supporting metadata | [docs/maintainer-workflow.md](docs/maintainer-workflow.md) |

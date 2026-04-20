@@ -31,9 +31,23 @@ These top-level paths are not directly involved in user-workflow, but maintainer
 - `.github/`
 - `ci/`
 - `docs/`
+- `file-classifier.toml`
+- `hack/`
 - `test/`
 - `plans/`
 - `.agents/`
+
+`file-classifier.toml` is the repository-root source of watched-path facts for changed-file classification.
+
+`hack/` is the home for reusable maintainer automation scripts such as changed-file classifiers that CI, lint, or other supporting jobs can share. These scripts provide a small repository-facing interface for questions like "did a user-workflow implementation input change?" without forcing each caller to duplicate path logic. `hack/` is not part of the user-workflow input surface by itself.
+
+## Change Detection CLI
+
+Treat changed-file classification as supporting release infrastructure.
+
+`file-classifier.toml` owns the watched-path facts, `hack/change-detection/main.py` owns the Git changed-file classification interface, and workflow YAML should stay limited to orchestration. Do not duplicate watched-path lists in callers.
+
+The calling convention, mode meanings, and watched path sets are described in `docs/release-image.md`.
 
 ## Package Documentation
 
@@ -61,7 +75,7 @@ When changing `.dotter/` layout, Dotter merge rules, or the `justfile` implement
 | Install behavior | `install` | `script/`, `packages/`, `justfile`, `README.md` | narrow install proof first, then broader workflow proof if stage boundaries move |
 | Stow behavior | `stow` | `.dotter/`, `packages/`, `justfile`, `README.md` | read `docs/dotter-and-just.md`, then run dotter preview or targeted deploy proof |
 | Post-install behavior | `post` | `script/`, `packages/`, `justfile`, `README.md` | targeted post hook or composed workflow proof |
-| Release and CI infrastructure | supporting | `ci/`, `.github/`, `docs/`, `plans/` | validate the image build or workflow path directly, then run the broader workflow proof when Unix behavior could be affected |
+| Release and CI infrastructure | supporting | `ci/`, `.github/`, `file-classifier.toml`, `hack/`, `docs/`, `plans/` | validate the image build or workflow path directly, then run the broader workflow proof when Unix behavior could be affected |
 | Supporting docs and validation | supporting | `test/`, `docs/`, `plans/`, `.agents/` | validate the changed proof surface itself, then the affected runtime path if needed |
 | Command surface | multiple stages | `justfile`, `README.md`, `AGENTS.md`, `docs/` | validate the changed command path, use `docs/dotter-and-just.md` when stow-side commands changed, and update workflow docs in the same change |
 
