@@ -12,29 +12,13 @@ local launch_menu = {}
 local wsl_domains = {}
 
 if platform.is_win then
-	default_prog = { "pwsh.exe", "-NoLogo" }
+	default_prog = { "wsl.exe", "--cd", "/home", "--user", "root", "--exec", "tmux" }
 	wsl_domains = wezterm.default_wsl_domains()
-
-	for _, domain in ipairs(wsl_domains) do
-		if domain.distribution == "Ubuntu-24.04" or domain.name == "WSL:Ubuntu-24.04" then
-			domain.username = "root"
-			domain.default_prog = { "zsh", "-l" }
-		end
-	end
 
 	launch_menu = {
 		{
 			label = "PowerShell",
 			args = { "pwsh.exe", "-NoLogo" },
-		},
-		{
-			label = "WSL Ubuntu 24.04",
-			domain = { DomainName = "WSL:Ubuntu-24.04" },
-		},
-		{
-			label = "WSL Ubuntu 24.04 (tmux)",
-			domain = { DomainName = "WSL:Ubuntu-24.04" },
-			args = { "tmux" },
 		},
 	}
 end

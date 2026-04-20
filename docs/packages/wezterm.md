@@ -26,7 +26,7 @@ This document explains the repo-managed WezTerm package under `packages/wezterm/
 - The package keeps the upstream theme and background logic, but it intentionally does not import statusline, tab-title, launcher, workspace, or multiplexer modules.
 - The background controller exposes four user modes as `(background, blur_backdrop)` mappings: original image with blur backdrop disabled, pre-rendered acrylic image with blur backdrop disabled, focus color with blur backdrop disabled, and platform blur backdrop with no custom background.
 - The package starts in original-image mode. Acrylic mode uses pre-rendered `.acrylic.*` images when they exist, then falls back to the original image list or the focus-color mode.
-- The default launched shell is platform-specific: Windows uses `pwsh.exe -NoLogo`, while macOS and Linux use `zsh -l`.
+- The default launched shell is platform-specific: Windows starts the WSL default distribution as `root` in `/home` and runs `tmux`, while macOS and Linux use `zsh -l`.
 - The primary Latin font remains `SauceCodePro Nerd Font`; the Chinese fallback stack starts with `LXGW WenKai Mono` and appends a platform CJK font where configured. `cell_width` is pinned to `1.0` to avoid further widening the terminal grid.
 
 ## Key Bindings
@@ -35,9 +35,12 @@ This document explains the repo-managed WezTerm package under `packages/wezterm/
 - `Alt+C` copies to the clipboard.
 - `Alt+V` pastes from the clipboard.
 - `Ctrl+N` opens a new WezTerm window.
-- On Windows, `Ctrl+Shift+P` opens the WezTerm launcher in fuzzy mode and offers `PowerShell`, `WSL Ubuntu 24.04`, and `WSL Ubuntu 24.04 (tmux)`.
-- The `WSL Ubuntu 24.04` launcher item uses the `WSL:Ubuntu-24.04` domain with `username = "root"` and `default_prog = { "zsh", "-l" }`, so that entry opens directly as root in zsh.
-- The `WSL Ubuntu 24.04 (tmux)` launcher item uses the same WSL domain but explicitly starts `tmux`.
+- On Windows, `Shift+Alt+\` activates the WezTerm leader key for 3 seconds; the config binds this as mapped `|` with `ALT|SHIFT`.
+- On Windows, leader then `p` opens a visible domain group selector:
+  - `w` opens a fuzzy WSL domain selector and spawns the selected domain in a new tab.
+  - `s` opens a fuzzy SSH domain selector and spawns the selected domain in a new tab.
+  - `m` opens a fuzzy SSHMUX domain selector and attaches the selected mux domain.
+- The default Windows startup command is `wsl.exe --cd /home --user root --exec tmux`, so new windows use the WSL default distribution without naming a distribution in the config.
 - Background controls use the upstream modifier policy:
   - macOS: `SUPER+/` next backdrop, `SUPER|CTRL+/` selector, `SUPER+B` mode toggle
   - Windows and Unix: `ALT+/` next backdrop, `ALT|CTRL+/` selector, `ALT+B` mode toggle
