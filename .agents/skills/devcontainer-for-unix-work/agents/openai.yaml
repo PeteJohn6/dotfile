@@ -1,4 +1,0 @@
-interface:
-  display_name: "Devcontainer for Unix Work"
-  short_description: "Develop, debug, or test in a Unix devcontainer"
-  default_prompt: "Use $devcontainer-for-unix-work to develop, debug, reproduce, or test Unix-side repository changes in the disposable devcontainer at test/devcontainer/devcontainer.json."

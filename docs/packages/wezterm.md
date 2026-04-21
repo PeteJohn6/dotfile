@@ -62,7 +62,7 @@ Additional image pairs can be dropped into `packages/wezterm/backdrops/`. Files 
 ## Validation Design
 
 - Validate Dotter deployment first so path and package-name regressions surface before runtime debugging.
-- When package configuration changes, use the repository devcontainer workflow to prove that the Unix `bootstrap -> install -> stow -> post` contract still holds.
+- When package configuration changes, use the repository Docker container workflow to prove that the Unix `bootstrap -> install -> stow -> post` contract still holds.
 - After static checks, run WezTerm on a machine with the terminal installed and exercise the background shortcuts to confirm the runtime behavior.
 
 ## Fast Checks
@@ -70,8 +70,8 @@ Additional image pairs can be dropped into `packages/wezterm/backdrops/`. Files 
 | Task | Command |
 | --- | --- |
 | Windows dry-run | `dotter.exe deploy --dry-run` |
-| Unix dry-run in devcontainer | `./bin/dotter deploy --dry-run` |
-| Full workflow in devcontainer | `just install && just stow && just post` |
+| Unix dry-run in Docker container | `./bin/dotter deploy --dry-run` |
+| Full workflow in Docker container | `just install && just stow && just post` |
 
 ## Common Failure Modes
 

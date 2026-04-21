@@ -36,15 +36,15 @@ The profile enters WSL as `root`, starts in `/home`, and runs `zsh`.
 
 - Validate Dotter deployment first so path and package-name regressions surface before runtime debugging.
 - On Windows, use `dotter.exe deploy --dry-run` to verify `wsl.toml` is deployed.
-- When Unix Alacritty mappings change, validate the Unix Dotter preview in the repository devcontainer.
+- When Unix Alacritty mappings change, validate the Unix Dotter preview in the repository Docker container workflow.
 
 ## Fast Checks
 
 | Task | Command |
 | --- | --- |
 | Windows dry-run | `dotter.exe deploy --dry-run` |
-| Unix dry-run in devcontainer | `./bin/dotter deploy --dry-run` |
-| Full workflow in devcontainer | `just install && just stow && just post` |
+| Unix dry-run in Docker container | `./bin/dotter deploy --dry-run` |
+| Full workflow in Docker container | `just install && just stow && just post` |
 
 ## Common Failure Modes
 

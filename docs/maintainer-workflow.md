@@ -56,7 +56,7 @@ When changing a specific package configuration, read `docs/packages/overview.md`
 - Record shared package conventions and cross-package rules in `docs/packages/overview.md`.
 - Record the package's design intent, layout notes, and configuration model in `docs/packages/<package>.md`.
 - Record package-specific debugging and validation guidance in that same `docs/packages/<package>.md` file.
-- When changing a package configuration, use `devcontainer-for-unix-work` to validate that package configuration in isolation before broader workflow validation.
+- When changing a package configuration, use `container-for-unix-work` to validate that package configuration in isolation before broader workflow validation.
 - Keep generic workflow-level validation guidance in this document; put package-specific commands, common failure modes, and troubleshooting notes in the package doc.
 
 ## Dotter And Just
@@ -84,14 +84,14 @@ When changing `.dotter/` layout, Dotter merge rules, or the `justfile` implement
 1. Identify which user-workflow stage changed: bootstrap, install, stow, post, or only validation/supporting paths.
 2. Update the implementation layer behind that stage.
 3. Run static validation appropriate to the edited paths, including docs and other non-runtime checks. Prefer direct formatter, linter, and toolchain commands over repo-local wrapper scripts.
-4. When a package configuration changes, use `devcontainer-for-unix-work` to validate that package configuration in isolation before broader workflow validation.
-5. Use `devcontainer-for-unix-work` to validate that the full user-facing `bootstrap -> install -> stow -> post` model still holds.
+4. When a package configuration changes, use `container-for-unix-work` to validate that package configuration in isolation before broader workflow validation.
+5. Use `container-for-unix-work` to validate that the full user-facing `bootstrap -> install -> stow -> post` model still holds.
 6. Add the narrowest relevant stage-specific test, harness, or command path when the change needs more than the full workflow check to prove the affected contract still holds.
 7. Update the user-facing and maintainer-facing docs in the same change, including `docs/packages/overview.md` when shared package conventions changed, `docs/packages/<package>.md` when package behavior changed, and `docs/dotter-and-just.md` when stow-side deployment or command-surface implementation changed.
 
 ## Validation Skills
 
 - Prefer `test/` or the relevant tool's direct formatter, linter, or built-in checks first when they already provide the right proof surface.
-- Use `devcontainer-for-unix-work` to validate package configurations in isolation when package config changes.
-- Use `devcontainer-for-unix-work` to validate the full user-facing workflow model.
+- Use `container-for-unix-work` to validate package configurations in isolation when package config changes.
+- Use `container-for-unix-work` to validate the full user-facing workflow model.
 - Keep validation aligned with the affected user-workflow stage, not internal directory boundaries.
