@@ -1,0 +1,4 @@
+interface:
+  display_name: "Container for Unix Work"
+  short_description: "Develop, debug, or test in a disposable Docker Unix container"
+  default_prompt: "Use $container-for-unix-work to develop, debug, reproduce, or test Unix-side repository changes in the disposable Docker environment at test/container."

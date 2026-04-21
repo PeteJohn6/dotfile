@@ -32,7 +32,7 @@ A chat plan or other transient discussion does not satisfy the ExecPlan requirem
 ### Validation & Test
 
 - End every change with static validation appropriate to the edited paths, including docs and other non-runtime checks. Prefer direct formatter, linter, and toolchain commands over repo-local wrapper scripts.
-- Use `devcontainer-for-unix-work` to test that the full user-facing `bootstrap -> install -> stow -> post` model still holds.
+- Use `container-for-unix-work` to test that the full user-facing `bootstrap -> install -> stow -> post` model still holds.
 - Add narrower stage-specific or harness-specific proof when the change needs more than the full workflow check to demonstrate correctness.
 
 ## Project Structure Guide
