@@ -1,23 +1,36 @@
 # Packages Overview
 
-This overview covers the shared conventions for assets under `packages/` and the package guides under `docs/packages/`. These assets are directly involved in user-workflow because they participate in install, stow, and post behavior.
+This overview defines the shared conventions for repo-managed assets under `packages/` and the package guides under `docs/packages/`.
 
-## Documentation Model
+Package guides are current configuration references. They explain how a package is configured now, how the files are deployed or loaded, and how the package participates in the maintained `bootstrap -> install -> stow -> post` model.
 
-- `packages/<package>/` stores the deployable config, scripts, and package-local tests for a maintained package.
-- `docs/packages/overview.md` stores the shared package conventions that apply across maintained packages.
-- `docs/packages/<package>.md` stores the durable design intent, layout notes, operational guidance, and package-specific debugging and validation notes for that package.
-- Package guides should describe which user-workflow stages the package participates in.
-- Keep package design and package-specific testing guidance in the same `docs/packages/<package>.md` file instead of splitting them across multiple docs.
-- Update `docs/packages/overview.md` when shared package conventions change.
-- Update the matching package guide whenever a package's structure, bootstrap behavior, debugging guidance, or verification flow changes.
+## Documentation Boundary
+
+`docs/packages/<package>.md` should contain:
+
+- current design and configuration model
+- key decisions and package layout
+- lifecycle integration across install lists, pre-install rules, Dotter deployment, and post hooks
+- runtime assumptions and package-specific troubleshooting
+- concise validation notes for the edited package
+
+`docs/packages/` should not contain execution plans, status logs, staged implementation instructions, task queues, release projections, or retrospectives. Put those artifacts under `plans/`.
+
+Every package guide must include a `Lifecycle Integration` section, or an equivalent section with the same facts, that states:
+
+- whether the package appears in `packages/packages.list` or `packages/container.list`
+- whether the package has a package-specific pre-install rule
+- whether Dotter deploys the package and on which platform profile
+- whether the package has a post hook
+
+Keep package-local `README.md` files short. Durable package knowledge belongs in the matching guide under `docs/packages/`.
 
 ## Package Lists
 
 | File | Purpose |
 | --- | --- |
 | `packages/packages.list` | Full desktop install list with optional `@platform` selectors |
-| `packages/container.list` | Smaller container list without platform selectors |
+| `packages/container.list` | Smaller container install list without platform selectors |
 
 Desktop list syntax:
 
@@ -48,13 +61,14 @@ This keeps the install stage split into two responsibilities:
 - the package-manager install phase stays focused on normal manager-driven installs.
 - because `script/install.sh` skips tools whose CLI is already available, a successful pre-install path can satisfy the package before the package-manager phase runs.
 
-Unix currently uses the explicit rule library in `packages/pre-install-unix.sh`.
-Windows currently keeps its pre-install preparation inside `script/install.ps1` before the main Scoop install loop.
+Unix currently uses the explicit rule library in `packages/pre-install-unix.sh`. Windows keeps its current pre-install preparation inside `script/install.ps1` before the main Scoop install loop.
 
-Current built-in rules:
+Current package-specific Unix rules:
 
-- `neovim`: apt-only tarball install path
-- `starship`: Linux installer path into `INSTALL_BIN_DIR`
+| Package key | Handler | Package guide |
+| --- | --- | --- |
+| `neovim` | `preinstall_neovim` | [nvim.md](nvim.md) |
+| `starship` | `preinstall_starship` | [starship.md](starship.md) |
 
 ## Post Hooks
 
@@ -66,27 +80,40 @@ Rules for post hooks:
 - self-check the CLI first and exit `0` when the tool is absent
 - keep hooks idempotent and emit `[post:<tool>]` logs
 
-The post orchestrators run every discovered script; self-checking is the only filter.
+The post orchestrators run every discovered script; self-checking is the only filter. Shared execution rules stay here, and concrete hook behavior belongs in the matching package guide.
+
+Current package-specific post hooks:
+
+| Hook | Behavior owner |
+| --- | --- |
+| `packages/post/nvim.sh` | [nvim.md](nvim.md) |
+| `packages/post/nvim.ps1` | [nvim.md](nvim.md) |
+| `packages/post/tmux.sh` | [tmux.md](tmux.md) |
 
 ## Maintained Config Packages
 
 Repo-managed config packages live under `packages/<name>/`. When adding or changing one:
 
 1. update the install list if software installation should change
-2. update dotter mappings if deployed files should change
+2. update Dotter mappings if deployed files should change
 3. add a pre-install rule only when the package-manager path is insufficient
 4. add a post hook only when work must happen after deployment
-5. sync `docs/packages/overview.md` when shared package conventions change
-6. sync the matching `docs/packages/<package>.md` guide when the package design, workflow, debugging guidance, or verification flow changes
-7. sync `README.md` and `docs/user-workflow.md` when the user-visible surface changes
+5. sync this overview when shared package conventions change
+6. sync the matching package guide when configuration, lifecycle behavior, troubleshooting, or validation notes change
+7. sync `README.md` and `docs/user-workflow.md` when the user-visible command surface changes
 
 Treat package changes in terms of the user-workflow stage they affect: install, stow, or post.
 
 Current package guides:
 
-| Package | Guide |
-| --- | --- |
-| `alacritty` | [alacritty.md](alacritty.md) |
-| `nvim` | [nvim.md](nvim.md) |
-| `powershell` | [powershell.md](powershell.md) |
-| `wezterm` | [wezterm.md](wezterm.md) |
+| Package | Guide | Workflow role |
+| --- | --- | --- |
+| `alacritty` | [alacritty.md](alacritty.md) | Dotter-managed terminal config; installed on macOS and Windows |
+| `git` | [git.md](git.md) | Dotter-managed global Git config; installed on desktop and container profiles |
+| `nvim` | [nvim.md](nvim.md) | Dotter-managed Neovim config with Unix pre-install and post hooks |
+| `powershell` | [powershell.md](powershell.md) | Dotter-managed Windows PowerShell profile |
+| `starship` | [starship.md](starship.md) | Dotter-managed Starship symbol config with Unix pre-install support |
+| `tmux` | [tmux.md](tmux.md) | Dotter-managed Unix tmux config with a post hook |
+| `wezterm` | [wezterm.md](wezterm.md) | Dotter-managed terminal config; installed on macOS and Windows |
+| `zellij` | [zellij.md](zellij.md) | Repo-maintained config that is not wired into install or Dotter |
+| `zsh` | [zsh.md](zsh.md) | Dotter-managed Unix shell profile; installed on desktop and container profiles |

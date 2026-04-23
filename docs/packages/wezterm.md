@@ -1,13 +1,13 @@
 # WezTerm Package
 
-This document explains the repo-managed WezTerm package under `packages/wezterm/`. It covers the package layout, the imported background system, and the validation path for package changes.
+This guide explains the repo-managed WezTerm package under `packages/wezterm/`. It covers the package layout, the imported background system, lifecycle integration, and validation notes.
 
 ## Design Intent
 
-- Keep the deployed WezTerm config minimal even while reusing upstream theme, font, and backdrop modules.
+- Keep the deployed WezTerm config minimal while reusing upstream theme, font, and backdrop modules.
 - Preserve the repository's existing Alacritty-style copy, paste, fullscreen, and new-window bindings.
 - Ship a usable background-image system that works out of the box with a small sample image set and pre-rendered acrylic variants.
-- Keep the deployment contract simple by stowing the whole package directory to `~/.config/wezterm` on every supported platform.
+- Keep the deployment contract simple by stowing the whole package directory to `~/.config/wezterm` on every supported platform profile.
 
 ## Structure
 
@@ -20,14 +20,17 @@ This document explains the repo-managed WezTerm package under `packages/wezterm/
 | `packages/wezterm/utils/platform.lua` | Lightweight platform detection |
 | `packages/wezterm/backdrops/` | Sample images and user-added background assets |
 
-## Core Patterns
+## Configuration Model
 
-- `wezterm.lua` must call `backdrops:set_images()` during initial config load because the image scan uses `wezterm.glob(...)`, which WezTerm expects to run from the top-level config evaluation path.
-- The package keeps the upstream theme and background logic, but it intentionally does not import statusline, tab-title, launcher, workspace, or multiplexer modules.
-- The background controller exposes four user modes as `(background, blur_backdrop)` mappings: original image with blur backdrop disabled, pre-rendered acrylic image with blur backdrop disabled, focus color with blur backdrop disabled, and platform blur backdrop with no custom background.
-- The package starts in original-image mode. Acrylic mode uses pre-rendered `.acrylic.*` images when they exist, then falls back to the original image list or the focus-color mode.
-- The default launched shell is platform-specific: Windows starts the WSL default distribution as `root` in `/home` and runs `tmux`, while macOS and Linux use `zsh -l`.
-- The primary Latin font remains `SauceCodePro Nerd Font`; the Chinese fallback stack starts with `LXGW WenKai Mono` and appends a platform CJK font where configured. `cell_width` is pinned to `1.0` to avoid further widening the terminal grid.
+`wezterm.lua` calls `backdrops:set_images()` during initial config load because the image scan uses `wezterm.glob(...)`, which WezTerm expects to run from the top-level config evaluation path.
+
+The package keeps the upstream theme and background logic, but it does not import statusline, tab-title, launcher, workspace, or multiplexer modules.
+
+The background controller exposes four user modes as `(background, blur_backdrop)` mappings: original image with blur backdrop disabled, pre-rendered acrylic image with blur backdrop disabled, focus color with blur backdrop disabled, and platform blur backdrop with no custom background. The package starts in original-image mode. Acrylic mode uses pre-rendered `.acrylic.*` images when they exist, then falls back to the original image list or the focus-color mode.
+
+The default launched shell is platform-specific: Windows starts the WSL default distribution as `root` in `/home` and runs `tmux`, while macOS and Linux use `zsh -l`.
+
+The primary Latin font is `SauceCodePro Nerd Font`; the Chinese fallback stack starts with `LXGW WenKai Mono` and appends a platform CJK font where configured. `cell_width` is pinned to `1.0` to avoid further widening the terminal grid.
 
 ## Key Bindings
 
@@ -35,17 +38,13 @@ This document explains the repo-managed WezTerm package under `packages/wezterm/
 - `Alt+C` copies to the clipboard.
 - `Alt+V` pastes from the clipboard.
 - `Ctrl+N` opens a new WezTerm window.
-- On Windows, `Shift+Alt+\` activates the WezTerm leader key for 3 seconds; the config binds this as mapped `|` with `ALT|SHIFT`.
-- On Windows, leader then `p` opens a visible domain group selector:
-  - `w` opens a fuzzy WSL domain selector and spawns the selected domain in a new tab.
-  - `s` opens a fuzzy SSH domain selector and spawns the selected domain in a new tab.
-  - `m` opens a fuzzy SSHMUX domain selector and attaches the selected mux domain.
-- The default Windows startup command is `wsl.exe --cd /home --user root --exec tmux`, so new windows use the WSL default distribution without naming a distribution in the config.
+- On Windows, `Shift+Alt+\` activates the WezTerm leader key for 3 seconds.
+- On Windows, leader then `p` opens a visible domain group selector for WSL, SSH, and SSHMUX domains.
 - Background controls use the upstream modifier policy:
   - macOS: `SUPER+/` next backdrop, `SUPER|CTRL+/` selector, `SUPER+B` mode toggle
   - Windows and Unix: `ALT+/` next backdrop, `ALT|CTRL+/` selector, `ALT+B` mode toggle
-- The mode toggle order is original image, pre-rendered acrylic image, focus, platform blur backdrop, then back to original image.
-- Platform blur backdrop uses `win32_system_backdrop = "Acrylic"` with `window_background_opacity = 0.8` and `win32_acrylic_accent_color` on Windows, `macos_window_background_blur = 20` with `window_background_opacity = 0.3` on macOS, and `kde_window_background_blur = true` with `window_background_opacity = 0.4` on Linux.
+
+The mode toggle order is original image, pre-rendered acrylic image, focus, platform blur backdrop, then back to original image.
 
 ## Background Assets
 
@@ -59,25 +58,24 @@ The package ships a small sample backdrop set so the background system is immedi
 
 Additional image pairs can be dropped into `packages/wezterm/backdrops/`. Files whose names contain `.acrylic.`, `.acrylic-`, or `.acrylic_` are treated as acrylic variants by the background controller.
 
-## Validation Design
+## Lifecycle Integration
 
-- Validate Dotter deployment first so path and package-name regressions surface before runtime debugging.
-- When package configuration changes, use the repository Docker container workflow to prove that the Unix `bootstrap -> install -> stow -> post` contract still holds.
-- After static checks, run WezTerm on a machine with the terminal installed and exercise the background shortcuts to confirm the runtime behavior.
-
-## Fast Checks
-
-| Task | Command |
+| Stage | Current behavior |
 | --- | --- |
-| Windows dry-run | `dotter.exe deploy --dry-run` |
-| Unix dry-run in Docker container | `./bin/dotter deploy --dry-run` |
-| Full workflow in Docker container | `just install && just stow && just post` |
+| Install list | `packages/packages.list` installs `wezterm @macos,windows`. It is not in `packages/container.list`. |
+| Pre-install | No package-specific pre-install rule. |
+| Dotter deployment | Unix and Windows Dotter profiles deploy `packages/wezterm` to `~/.config/wezterm` when the selected profile includes `wezterm`. |
+| Post hook | No post hook. |
+
+## Validation Notes
+
+Use Dotter dry-runs to confirm the package directory target. After Lua or asset changes, start WezTerm on a machine with the terminal installed and exercise the background shortcuts, platform shell launch, and common keybindings.
 
 ## Common Failure Modes
 
-- missing sample images causing the background system to fall back to focus mode
-- invalid Lua syntax in one of the imported modules
-- a missing font resulting in WezTerm falling back to a different family than intended
-- Linux platform blur backdrop requires a WezTerm build that supports `kde_window_background_blur`
-- drift between README examples, Dotter defaults, and the actual maintained package list
-- upstream backdrop asset shape changing if the package is refreshed from the original source repository
+- Missing sample images causing the background system to fall back to focus mode.
+- Invalid Lua syntax in one of the imported modules.
+- A missing font resulting in WezTerm falling back to a different family than intended.
+- Linux platform blur backdrop requires a WezTerm build that supports `kde_window_background_blur`.
+- Drift between Dotter defaults, package-list entries, and the actual maintained package directory.
+- Upstream backdrop asset shape changing if the package is refreshed from the original source repository.

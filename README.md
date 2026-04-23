@@ -122,12 +122,6 @@ The package lists under `packages/` are broader than the maintained config packa
 
 In other words: `packages/*.list` decides what software gets installed, while `.dotter/local.toml` decides which repo-managed configs get deployed.
 
-## Design Principles
-
-1. **Idempotency**: bootstrap, install, deploy, and post steps should be safe to rerun.
-2. **Platform awareness**: scripts detect platform and container context before acting.
-3. **Separation of concerns**: install lists decide software; dotter profiles decide deployed config.
-
 ## License
 
 MIT

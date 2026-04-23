@@ -1,6 +1,6 @@
 # PowerShell Package
 
-This document explains the repo-managed PowerShell package under `packages/powershell/`. It covers the package layout, module conventions, design intent behind the profile structure, and how to debug and validate changes.
+This guide explains the repo-managed PowerShell package under `packages/powershell/`. It covers the profile layout, module conventions, lifecycle integration, and validation notes.
 
 ## Design Intent
 
@@ -14,64 +14,71 @@ This document explains the repo-managed PowerShell package under `packages/power
 | Path | Role |
 | --- | --- |
 | `packages/powershell/Microsoft.PowerShell_profile.ps1` | Main package entrypoint |
-| `packages/powershell/profile.d/` | Ordered domain modules |
-| `packages/powershell/test/` | Validation and diagnostics |
+| `packages/powershell/profile.d/05-utils.ps1` | Shared command and cache helpers |
+| `packages/powershell/profile.d/07-starship.ps1` | Starship prompt initialization when `starship` is available |
+| `packages/powershell/profile.d/10-git.ps1` | Git shortcuts and worktree helpers |
+| `packages/powershell/profile.d/20-docker.ps1` | Docker and `fzf` helpers plus completion cache |
+| `packages/powershell/profile.d/90-local.ps1.example` | Example machine-local module |
+| `packages/powershell/test/` | Package diagnostics |
 
-## Core Patterns
+## Configuration Model
 
-- The main profile detects minimal sessions and skips rich UX modules when the environment is non-interactive.
-- Modules in `profile.d/` load in lexical order, so numeric prefixes control dependencies.
-- Domain modules should guard on required tools and return early when prerequisites are missing.
-- User-facing shortcuts should be PowerShell functions with comment-based help, not aliases.
+The profile skips repo-managed modules when the session cannot support interactive profile UX. Minimal mode activates for `TERM=dumb`, `-NonInteractive`, redirected stdin, or redirected stdout. When `PROFILE_DEBUG=1` is set, the profile prints the skip reason or the loaded module list.
 
-Those rules keep the package stable across interactive shells, CI-style sessions, and partially provisioned machines. A missing dependency should degrade behavior locally rather than breaking profile startup globally.
+In rich sessions, `Microsoft.PowerShell_profile.ps1` imports Chocolatey tab completion when present, then loads `profile.d/*.ps1` in lexical order. Numeric prefixes define dependencies:
 
-## Module Authoring Rules
+- `05-utils.ps1` defines `Test-Command` and the profile cache directory.
+- `07-starship.ps1` initializes Starship only when the binary is available.
+- `10-git.ps1` exports Git helpers only when `git` is available.
+- `20-docker.ps1` exports Docker helpers only when `docker` is available.
+- `90-local.ps1.example` documents the ignored machine-local extension point.
 
-When adding a module:
+## Exported Helpers
 
-1. choose an ordering prefix that matches its dependencies
-2. guard on required external tools
-3. document user-facing functions with `.SYNOPSIS` and, for non-trivial commands, `.DESCRIPTION` and `.EXAMPLE`
-4. keep `README.md` synchronized when exported commands or prerequisites change
+Git helpers avoid short aliases that conflict with built-in PowerShell aliases.
 
-## Diagnostics
-
-Use the test harness in `packages/powershell/test/` after changes.
-
-## Validation Design
-
-- Exercise the full profile entrypoint first so regressions in module ordering or guards surface early.
-- Keep a second layer of targeted commands for isolating failures to a specific module.
-- Make verification cheap enough that package changes can be checked before they drift into user-visible breakage.
-
-## Fast Checks
-
-| Task | Command |
+| Command | Description |
 | --- | --- |
-| Load the rich profile | `pwsh -NoProfile -NoExit -Command ". '$PWD\\Microsoft.PowerShell_profile.ps1'"` |
-| Enable debug output | `$env:PROFILE_DEBUG=1; pwsh -NoProfile -NoExit -Command ". '$PWD\\Microsoft.PowerShell_profile.ps1'"` |
-| Run the main diagnostic script | `pwsh -NoProfile -Command "& '$PWD\\test\\test-profile-commands.ps1'"` |
-| Check specific exported commands | `Get-Command gitco,gitwt,gitwts,gitwtr,dockerfexec,dockerfshell,gits,dockerps,dockercompose -ErrorAction SilentlyContinue | Format-Table Name,CommandType` |
+| `gits` | `git status` |
+| `gitl` | `git log --oneline --decorate --graph` |
+| `gitco` | `git checkout`; interactive local branch selector when called without arguments and `fzf` is available |
+| `gitcm` | `git commit` |
+| `gitp` | `git push` |
+| `gitpl` | `git pull` |
+| `gitwt` | `git worktree` |
+| `gitwtc` | Create a worktree under the main repository `.tree/<branch>` and switch to it |
+| `gitwts` | Interactive worktree selector with `fzf` |
+| `gitwtr` | Interactive worktree remover with `fzf` and confirmation |
 
-## Recommended Validation Flow
+Docker helpers use the `dockerf*` naming convention for `fzf`-powered commands.
 
-1. Run `test-profile-commands.ps1`.
-2. Confirm prerequisites such as `git`, `docker`, `fzf`, and `starship`.
-3. Reproduce the issue in a rich interactive terminal when the profile is expected to load repo-managed modules.
-4. Test an individual module directly if the failure appears isolated.
+| Command | Description |
+| --- | --- |
+| `dockerfshell` | Select a running container and open `pwsh` or `bash` |
+| `dockerflogs` | Select one or more containers and show logs |
+| `dockerfrmi` | Select one or more images and remove them |
+| `dockerfrm` | Select one or more containers and remove them forcibly |
+| `dockerfrun` | Select a local image and run an interactive container |
+| `dockerfexec` | Select a running container and execute an entered command |
+
+Docker completion is cached at `cache/docker_completion.ps1` beside the PowerShell profile root and regenerated when missing or older than 30 days. Completion generation failures are ignored so profile startup can continue.
+
+## Lifecycle Integration
+
+| Stage | Current behavior |
+| --- | --- |
+| Install list | No package-specific entry in `packages/packages.list` or `packages/container.list`. The package assumes a PowerShell 7 profile host is already available. |
+| Pre-install | No package-specific pre-install rule. |
+| Dotter deployment | Windows deploys the main profile and `profile.d/` into `~/OneDrive/Documents/PowerShell/`. The default Windows Dotter profile selects `powershell`. |
+| Post hook | No post hook. |
+
+## Validation Notes
+
+Use `packages/powershell/test/test-profile-commands.ps1` for package diagnostics. For targeted debugging, load the profile with `PROFILE_DEBUG=1`, then check exported functions with `Get-Command`.
 
 ## Common Failure Modes
 
-- missing exported commands because a module guard returned early
-- syntax errors inside a profile module
-- minimal-session gating preventing repo-managed modules from loading in automation
-- documentation drift between actual commands and `README.md`
-
-## Useful Commands
-
-```powershell
-pwsh -NoProfile -Command "& '$PWD\test\test-profile-commands.ps1'"
-pwsh -NoProfile -Command ". '$PWD\profile.d\10-git.ps1'; Get-Command gitco,gitwt,gitwtr,gits -ErrorAction SilentlyContinue"
-$Error[0] | Format-List * -Force
-```
+- Missing exported commands because a module guard returned early.
+- Syntax errors inside a profile module.
+- Minimal-session gating preventing repo-managed modules from loading in automation.
+- Documentation drift between exported commands and this guide.

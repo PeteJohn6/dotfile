@@ -1,6 +1,6 @@
 # Neovim Package
 
-This document explains the repo-managed Neovim package under `packages/nvim/`. It covers both the file layout and the design choices behind the package.
+This guide explains the repo-managed Neovim package under `packages/nvim/`. It covers the file layout, configuration model, lifecycle hooks, and package-specific validation notes.
 
 ## Design Intent
 
@@ -18,8 +18,10 @@ This document explains the repo-managed Neovim package under `packages/nvim/`. I
 | `packages/nvim/lua/lazyconf.lua` | `lazy.nvim` bootstrap and setup |
 | `packages/nvim/lua/plugins/` | Plugin specs grouped by concern |
 | `packages/nvim/lazy-lock.json` | Reproducible plugin lockfile |
+| `packages/post/nvim.sh` | Unix post hook for `lazy.nvim` bootstrap and plugin sync |
+| `packages/post/nvim.ps1` | Windows post hook for `lazy.nvim` bootstrap and plugin sync |
 
-## Package Layout
+## Configuration Model
 
 Plugins are grouped by behavior rather than load order:
 
@@ -35,16 +37,20 @@ Plugins are grouped by behavior rather than load order:
 
 That structure keeps the package understandable at the feature level. A contributor changing completion, Git, or UI behavior should only need to inspect the matching plugin file instead of tracing one monolithic setup script.
 
-## Language Tooling Pattern
+`lua/plugins/language.lua` is intentionally configuration-driven. It centralizes Treesitter parser lists, formatter mappings, linter mappings, and LSP server metadata used by Mason and `lspconfig`.
 
-`lua/plugins/language.lua` is intentionally configuration-driven. It centralizes:
+## Lifecycle Integration
 
-- Treesitter parser lists
-- formatter mappings
-- linter mappings
-- LSP server metadata used by Mason and `lspconfig`
+| Stage | Current behavior |
+| --- | --- |
+| Install list | `packages/packages.list` installs `neovim(nvim)`. `packages/container.list` also includes `neovim(nvim)`. |
+| Pre-install | `packages/pre-install-unix.sh` maps `neovim` to `preinstall_neovim`. |
+| Dotter deployment | Unix deploys `packages/nvim` to `~/.config/nvim`. Windows deploys it to `~/AppData/Local/nvim`. |
+| Post hook | `packages/post/nvim.sh` and `packages/post/nvim.ps1` run Neovim headlessly and execute `Lazy! sync`. |
 
-This keeps language additions declarative and avoids scattering formatter, linter, and LSP changes across unrelated plugin files.
+`preinstall_neovim` only handles apt-based Unix installs. It skips when the package manager is not `apt` or when `nvim` is already on `PATH`. When apt lacks a usable Neovim command, the handler downloads the stable Neovim tarball for `x86_64` or `arm64`, installs it under `INSTALL_OPT_DIR/neovim`, links `INSTALL_BIN_DIR/nvim`, and verifies the linked binary.
+
+The post hooks self-check for `nvim`. If present, they run `nvim --headless +qa` to let the config bootstrap `lazy.nvim`, then run `nvim --headless "+Lazy! sync" +qa` to synchronize plugins.
 
 ## Operational Commands
 
@@ -57,4 +63,15 @@ This keeps language additions declarative and avoids scattering formatter, linte
 
 - Keep plugin specs modular and lazily loaded where possible.
 - Update `lazy-lock.json` only when plugin versions intentionally change.
-- When package bootstrap behavior changes, keep post-install scripts and docs aligned.
+- When package bootstrap behavior changes, keep post-install scripts and this guide aligned.
+
+## Validation Notes
+
+Use Lua syntax checks or a headless Neovim startup check for config changes. When plugin bootstrap behavior changes, run the matching post hook path for the target platform and confirm `Lazy! sync` completes.
+
+## Common Failure Modes
+
+- `lazy-lock.json` changes without an intentional plugin update.
+- A plugin spec assumes a tool that Mason does not install or track.
+- A formatter, linter, or LSP mapping is added outside `lua/plugins/language.lua`.
+- Post hooks fail because Neovim starts interactively or because a plugin command is renamed.
