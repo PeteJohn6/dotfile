@@ -11,6 +11,9 @@
 [wezterm.files]
 "packages/wezterm" = "~/.config/wezterm"
 
+[ghostty.files]
+"packages/ghostty" = "~/.config/ghostty"
+
 [zsh.files]
 "packages/zsh/.zshrc" = "~/.zshrc"
 "packages/zsh/conf.d" = "~/.config/zsh/conf.d"

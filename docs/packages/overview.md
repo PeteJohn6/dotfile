@@ -43,6 +43,7 @@ Key rules:
 - `(cli_name)` defaults to the package name.
 - `@windows`, `@macos`, and `@linux` filter desktop installs by host platform.
 - `| manager:name` overrides the install name for a package manager.
+- `brew:cask:name` installs a Homebrew cask with `brew install --cask name`.
 - Comments and empty lines are ignored.
 
 ## Pre-Install Rules
@@ -109,6 +110,7 @@ Current package guides:
 | Package | Guide | Workflow role |
 | --- | --- | --- |
 | `alacritty` | [alacritty.md](alacritty.md) | Dotter-managed terminal config; installed on macOS and Windows |
+| `ghostty` | [ghostty.md](ghostty.md) | Dotter-managed Unix terminal config; installed on macOS through Homebrew cask |
 | `git` | [git.md](git.md) | Dotter-managed global Git config; installed on desktop and container profiles |
 | `nvim` | [nvim.md](nvim.md) | Dotter-managed Neovim config with Unix pre-install and post hooks |
 | `powershell` | [powershell.md](powershell.md) | Dotter-managed Windows PowerShell profile |

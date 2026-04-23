@@ -227,13 +227,29 @@ install_package() {
             maybe_sudo env DNF_YUM_AUTO_YES=1 dnf install -y -q "$install_name"
             ;;
         pacman) maybe_sudo pacman -S --noconfirm --needed "$install_name" ;;
-        brew)   env NONINTERACTIVE=1 CI=1 brew install "$install_name" ;;
+        brew)
+            if [[ "$install_name" == cask:* ]]; then
+                env NONINTERACTIVE=1 CI=1 brew install --cask "${install_name#cask:}"
+            else
+                env NONINTERACTIVE=1 CI=1 brew install "$install_name"
+            fi
+            ;;
     esac
 }
 
 is_package_satisfied() {
     local cli_name="$1"
-    command -v "$cli_name" >/dev/null 2>&1
+    local install_name="${2:-$1}"
+
+    if command -v "$cli_name" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if [[ "$PKG_MANAGER" == "brew" && "$install_name" == cask:* ]]; then
+        env NONINTERACTIVE=1 CI=1 brew list --cask "${install_name#cask:}" >/dev/null 2>&1 && return 0
+    fi
+
+    return 1
 }
 
 # Collect packages into array (bash 3.2 compatible)
@@ -274,8 +290,12 @@ for i in "${!packages[@]}"; do
     cli_name="${cli_names[$i]}"
     install_name="${install_names[$i]}"
 
-    if is_package_satisfied "$cli_name"; then
-        echo "[install] Skipping: $pkg (already satisfied: $cli_name)"
+    if is_package_satisfied "$cli_name" "$install_name"; then
+        satisfied_by="$cli_name"
+        if [[ "$PKG_MANAGER" == "brew" && "$install_name" == cask:* ]]; then
+            satisfied_by="${install_name#cask:} cask"
+        fi
+        echo "[install] Skipping: $pkg (already satisfied: $satisfied_by)"
         skipped=$((skipped + 1))
         skipped_packages+=("$pkg")
         continue

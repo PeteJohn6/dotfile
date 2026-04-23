@@ -5,6 +5,7 @@
 # Multi-platform selectors use a single token with no spaces (e.g. @windows,macos)
 # cli_name is optional and defaults to package name (e.g. neovim(nvim), ripgrep(rg))
 # Aliases: | separates optional per-manager name overrides (e.g. fd | apt:fd-find)
+# Homebrew casks use brew:cask:name (e.g. app @macos | brew:cask:app)
 
 # -- cross-platform --
 git
@@ -26,6 +27,7 @@ starship
 zsh
 alacritty @macos,windows
 wezterm @macos,windows
+ghostty @macos | brew:cask:ghostty
 tmux @macos,linux
 # nushell
 

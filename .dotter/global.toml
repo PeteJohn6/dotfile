@@ -30,3 +30,6 @@ alacritty_working_directory = "None"
 
 [wezterm]
 depends = []
+
+[ghostty]
+depends = []

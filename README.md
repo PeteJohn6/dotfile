@@ -50,7 +50,7 @@ Edit `.dotter/local.toml` to choose which maintained config packages are deploye
 
 ```toml
 includes = [".dotter/unix.toml"]
-packages = ["git", "nvim", "zsh", "starship", "tmux", "alacritty", "wezterm"]
+packages = ["git", "nvim", "zsh", "starship", "tmux", "alacritty", "wezterm", "ghostty"]
 [variables]
 alacritty_working_directory = "/home/your-user"  # or C:/Users/your-user
 ```
@@ -112,12 +112,13 @@ These are the config packages currently maintained in this repository and refere
 | `powershell` | Modular PowerShell profile and helper modules | Windows |
 | `alacritty` | Templated Alacritty config, shared themes, and a Windows WSL profile that follows the user's default WSL distribution | Linux, macOS, Windows |
 | `wezterm` | Modular WezTerm config with imported theme, fallback font stack, and backdrop image system | Linux, macOS, Windows |
+| `ghostty` | Ghostty config with custom theme, fallback font stack, keybinds, and static backdrop; installed only on macOS through Homebrew cask | Linux, macOS |
 
 ## Software Install Lists
 
 The package lists under `packages/` are broader than the maintained config packages above:
 
-- `packages/packages.list` is the host-machine install list. It currently includes CLI tools, terminals, shells, editors, and language tooling such as `git`, `neovim`, `ripgrep`, `fd`, `fzf`, `jq`, `yq`, `wezterm`, `starship`, `nushell`, `zed`, `nvm`, and `uv`.
+- `packages/packages.list` is the host-machine install list. It currently includes CLI tools, terminals, shells, editors, and language tooling such as `git`, `neovim`, `ripgrep`, `fd`, `fzf`, `jq`, `yq`, `wezterm`, `ghostty`, `starship`, `nushell`, `zed`, `nvm`, and `uv`. Ghostty is selected for macOS only and installs as a Homebrew cask.
 - `packages/container.list` is the smaller container-oriented install list used when `install.sh` detects a container runtime.
 
 In other words: `packages/*.list` decides what software gets installed, while `.dotter/local.toml` decides which repo-managed configs get deployed.

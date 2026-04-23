@@ -1,6 +1,6 @@
 # Unix local configuration (auto-copied by bootstrap)
 includes = [".dotter/unix.toml"]
-packages = ["git", "nvim", "zsh", "starship", "tmux", "alacritty", "wezterm"]
+packages = ["git", "nvim", "zsh", "starship", "tmux", "alacritty", "wezterm", "ghostty"]
 
 [variables]
 # Optional: set an absolute startup directory for Alacritty.
