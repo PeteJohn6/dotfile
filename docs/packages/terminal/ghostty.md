@@ -35,6 +35,12 @@ Ghostty background images require Ghostty 1.2.0 or newer and currently support P
 
 Because Ghostty applies the background image per terminal surface, split-heavy layouts may repeat the image across splits. Large images can also increase VRAM use.
 
+## Key Bindings
+
+Ghostty uses `keybind = trigger=action` entries in `packages/ghostty/config.ghostty` for explicit bindings. Use `keybind = trigger=unbind` entries in the same file when a platform default needs to be suppressed beside the explicit override.
+
+Terminal tab bindings follow the shared terminal modifier model from [terminal.md](../terminal.md): macOS uses `Command` where Windows and Linux use `Alt`. Do not treat the Windows `Alt` label as a literal macOS `Option` requirement for terminal-level tab actions.
+
 ## Lifecycle Integration
 
 | Stage | Current behavior |

@@ -30,19 +30,17 @@ The background controller exposes four user modes as `(background, blur_backdrop
 
 The default launched shell is platform-specific: Windows starts the WSL default distribution as `root` in `/home` and runs `tmux`, while macOS and Linux use `zsh -l`.
 
-The primary Latin font is `SauceCodePro Nerd Font`; the Chinese fallback stack starts with `LXGW WenKai Mono` and appends a platform CJK font where configured. `cell_width` is pinned to `1.0` to avoid further widening the terminal grid.
+WezTerm defines its platform fallback stack and font-size branch in `packages/wezterm/config/fonts.lua`. `cell_width` is pinned to `1.0` to avoid further widening the terminal grid.
 
 ## Key Bindings
 
-- `F11` toggles fullscreen.
-- `Alt+C` copies to the clipboard.
-- `Alt+V` pastes from the clipboard.
-- `Ctrl+N` opens a new WezTerm window.
+WezTerm disables default keybindings and defines terminal actions explicitly in `packages/wezterm/config/bindings.lua`. WezTerm-specific implementation details are:
+
+- WezTerm's terminal-level primary modifier is `SUPER` on macOS and `ALT` on Windows and Linux. In user-facing terms, terminal-level bindings that use Windows `Alt` map to macOS `Command`.
+- New, close, previous, and next terminal tab bindings are `Shift+Command+t`, `Shift+Command+w`, `Shift+Command+,`, and `Shift+Command+.` on macOS, with `Command` replaced by `Alt` on Windows and Linux.
 - On Windows, `Shift+Alt+\` activates the WezTerm leader key for 3 seconds.
 - On Windows, leader then `p` opens a visible domain group selector for WSL, SSH, and SSHMUX domains.
-- Background controls use the upstream modifier policy:
-  - macOS: `SUPER+/` next backdrop, `SUPER|CTRL+/` selector, `SUPER+B` mode toggle
-  - Windows and Unix: `ALT+/` next backdrop, `ALT|CTRL+/` selector, `ALT+B` mode toggle
+- Background controls can toggle the current image, open the image selector, and switch backdrop modes.
 
 The mode toggle order is original image, pre-rendered acrylic image, focus, platform blur backdrop, then back to original image.
 

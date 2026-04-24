@@ -35,6 +35,10 @@ wsl --set-default <DistroName>
 
 The profile enters WSL as `root`, starts in `/home`, and runs `zsh`.
 
+## Key Bindings
+
+Alacritty does not provide native terminal tabs, so this package has no terminal-tab keybinding configuration. Its package-local bindings are defined in `packages/alacritty/alacritty.toml.tmpl`.
+
 ## Lifecycle Integration
 
 | Stage | Current behavior |
