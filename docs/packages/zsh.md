@@ -17,6 +17,7 @@ This guide explains the repo-managed zsh package under `packages/zsh/`. The pack
 | `packages/zsh/conf.d/05-utils.zsh` | Shared command checks, warning helper, and cache directory |
 | `packages/zsh/conf.d/06-tty-guard.zsh` | Deleted-PTY guard for orphaned interactive shells |
 | `packages/zsh/conf.d/07-starship.zsh` | Starship prompt initialization when `starship` is available |
+| `packages/zsh/conf.d/08-misc.zsh` | Terminal declaration plus Linux user-level `uv` and `nvm` setup |
 | `packages/zsh/conf.d/10-git.zsh` | Git shortcuts and worktree helpers |
 | `packages/zsh/conf.d/15-tmux.zsh` | `tmux -u` wrapper |
 | `packages/zsh/conf.d/20-docker.zsh` | Docker and `fzf` helpers plus completion cache |
@@ -38,6 +39,7 @@ Module ordering is dependency-oriented:
 - `05-utils.zsh` defines `test_command`, `profile_warn`, and `PROFILE_CACHE_DIR`.
 - `06-tty-guard.zsh` exits orphaned interactive shells whose file descriptors point at deleted PTYs.
 - `07-starship.zsh` initializes Starship only when the binary is available.
+- `08-misc.zsh` declares `TERM=xterm-256color` and, on Linux, prepares `$HOME/.local/bin` plus `nvm`.
 - `10-git.zsh` exports Git helpers only when `git` is available.
 - `15-tmux.zsh` wraps `tmux` as `tmux -u` only when tmux is available.
 - `20-docker.zsh` exports Docker helpers only when `docker` is available.
