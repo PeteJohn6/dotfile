@@ -33,7 +33,7 @@ From the repository root:
 
 The build context must remain the repository root so the release workflow and local builds use the same deployment inputs.
 
-Fresh container bootstraps and this image build both seed `.dotter/local.toml` from `.dotter/default/container.toml`. During the image build, `bash bootstrap-up.sh` performs the normal repository workflow in `/workspace`. Then `ci/image/finalize-image.sh` materializes deployed symlinks under the container home directory that still point into `/workspace` and removes `/workspace`.
+Fresh container bootstraps and this image build both seed `.dotter/local.toml` from `.dotter/default/container.toml`. During the image build, `bash bootstrap-up.sh` performs the normal repository workflow in `/workspace`. Then `ci/image/finalize-image.sh` materializes deployed symlinks under the container home directory that still point into `/workspace`, copies Dotter's deployed zsh modules from `/root/.config/zsh/conf.d` to the `/root/conf.d` runtime directory loaded by `/root/.zshrc`, and removes `/workspace`.
 
 The final image is a runtime artifact, not a repo-debug image. It does not preserve the working tree for later `just` or `dotter` reruns inside the container.
 
