@@ -62,6 +62,22 @@ includes = [".dotter/windows.toml"]
 packages = ["git", "nvim", "starship", "powershell", "alacritty", "wezterm"]
 ```
 
+The Windows PowerShell package defaults to the PowerShell 7 current-user, current-host location under `~/Documents/PowerShell`. Check the location for the PowerShell host you use before deploying:
+
+```powershell
+$PROFILE.CurrentUserCurrentHost
+```
+
+Windows can redirect Documents through OneDrive or enterprise policy. If the reported profile is not `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1`, override both PowerShell targets in the machine-local `.dotter/local.toml` using the actual path:
+
+```toml
+[files]
+"packages/powershell/Microsoft.PowerShell_profile.ps1" = "D:/Redirected/Documents/PowerShell/Microsoft.PowerShell_profile.ps1"
+"packages/powershell/profile.d" = "D:/Redirected/Documents/PowerShell/profile.d"
+```
+
+The first target must match `$PROFILE.CurrentUserCurrentHost`; `profile.d` belongs beside that file. See the [PowerShell profile location guidance](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles) and [Dotter local target overrides](https://github.com/SuperCuber/dotter/wiki/3.-Packages-and-%60local.toml%60).
+
 On Windows, Alacritty also deploys `wsl.toml`, a WSL profile that follows the current user's default distribution.
 
 ### 3. Install and Deploy

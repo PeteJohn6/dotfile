@@ -33,6 +33,24 @@ In rich sessions, `Microsoft.PowerShell_profile.ps1` imports Chocolatey tab comp
 - `20-docker.ps1` exports Docker helpers only when `docker` is available.
 - `90-local.ps1.example` documents the ignored machine-local extension point.
 
+## Deployment Location
+
+On Windows, Dotter defaults the PowerShell 7 current-user, current-host profile to `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1` and deploys `profile.d/` beside it. PowerShell profile paths vary by user and host, so inspect the authoritative value in the PowerShell host you intend to use:
+
+```powershell
+$PROFILE.CurrentUserCurrentHost
+```
+
+If Documents is redirected by OneDrive or enterprise policy and that value differs from the default, override both source keys in the ignored machine-local `.dotter/local.toml`:
+
+```toml
+[files]
+"packages/powershell/Microsoft.PowerShell_profile.ps1" = "D:/Redirected/Documents/PowerShell/Microsoft.PowerShell_profile.ps1"
+"packages/powershell/profile.d" = "D:/Redirected/Documents/PowerShell/profile.d"
+```
+
+Set the first target to the exact `$PROFILE.CurrentUserCurrentHost` value and put `profile.d` in the same directory. Dotter merges machine-local `[files]` after included platform mappings, so these exact source keys replace the repository defaults without changing `.dotter/windows.toml`. For background, see Microsoft's [PowerShell profile documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles) and Dotter's [`local.toml` merge documentation](https://github.com/SuperCuber/dotter/wiki/3.-Packages-and-%60local.toml%60).
+
 ## Exported Helpers
 
 Git helpers avoid short aliases that conflict with built-in PowerShell aliases.
@@ -69,16 +87,17 @@ Docker completion is cached at `cache/docker_completion.ps1` beside the PowerShe
 | --- | --- |
 | Install list | No package-specific entry in `packages/packages.list` or `packages/container.list`. The package assumes a PowerShell 7 profile host is already available. |
 | Pre-install | No package-specific pre-install rule. |
-| Dotter deployment | Windows deploys the main profile and `profile.d/` into `~/OneDrive/Documents/PowerShell/`. The default Windows Dotter profile selects `powershell`. |
+| Dotter deployment | Windows deploys the main profile and `profile.d/` into `~/Documents/PowerShell/` by default. The default Windows Dotter profile selects `powershell`; redirected Documents locations use machine-local `[files]` overrides. |
 | Post hook | No post hook. |
 
 ## Validation Notes
 
-Use `packages/powershell/test/test-profile-commands.ps1` for package diagnostics. For targeted debugging, load the profile with `PROFILE_DEBUG=1`, then check exported functions with `Get-Command`.
+Confirm `$PROFILE.CurrentUserCurrentHost` resolves to the deployed entrypoint, then use `packages/powershell/test/test-profile-commands.ps1` for package diagnostics. For targeted debugging, load the profile with `PROFILE_DEBUG=1`, then check exported functions with `Get-Command`.
 
 ## Common Failure Modes
 
 - Missing exported commands because a module guard returned early.
+- A default target that does not match `$PROFILE.CurrentUserCurrentHost` because Documents is redirected and `.dotter/local.toml` lacks the two PowerShell `[files]` overrides.
 - Syntax errors inside a profile module.
 - Minimal-session gating preventing repo-managed modules from loading in automation.
 - Documentation drift between exported commands and this guide.

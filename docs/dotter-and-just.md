@@ -46,6 +46,26 @@ Maintain these rules:
 - keep `.dotter/local.toml` as machine-local operator state
 - never treat `.dotter/local.toml` or `.dotter/cache.toml` as canonical source of truth
 
+## Machine-Local Target Overrides
+
+Top-level `[files]` entries in `.dotter/local.toml` override matching repository source keys after package selection and included platform mappings are merged. Use this for a target that genuinely varies by machine; keep the shared default in the package or platform configuration. The override must repeat the source key exactly. See Dotter's [`local.toml` merge documentation](https://github.com/SuperCuber/dotter/wiki/3.-Packages-and-%60local.toml%60) for the upstream merge model.
+
+For example, `.dotter/windows.toml` defaults the PowerShell 7 profile and its modules to `~/Documents/PowerShell`. First inspect the actual current-user, current-host path in the PowerShell host being configured:
+
+```powershell
+$PROFILE.CurrentUserCurrentHost
+```
+
+When OneDrive or enterprise policy redirects Documents, add both mappings to the ignored `.dotter/local.toml` using the reported profile path and its sibling `profile.d` directory:
+
+```toml
+[files]
+"packages/powershell/Microsoft.PowerShell_profile.ps1" = "D:/Redirected/Documents/PowerShell/Microsoft.PowerShell_profile.ps1"
+"packages/powershell/profile.d" = "D:/Redirected/Documents/PowerShell/profile.d"
+```
+
+Preview the merged result with `just dry` before deploying. The PowerShell documentation explains why [`$PROFILE` should be checked per user and host](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles).
+
 ## Editing Rules
 
 - Prefer changing `.dotter/` mappings, package files under `packages/`, or platform overlays before changing `justfile`.
