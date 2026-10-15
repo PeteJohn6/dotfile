@@ -8,7 +8,7 @@ This guide is the entry point for repo-managed terminal emulator docs and adjace
 | --- | --- | --- |
 | [alacritty.md](terminal/alacritty.md) | Terminal emulator package | Dotter-rendered config and themes; no native terminal tabs |
 | [wezterm.md](terminal/wezterm.md) | Terminal emulator package | Dotter-managed config with terminal tabs and WezTerm-specific background controls |
-| [ghostty.md](terminal/ghostty.md) | Terminal emulator package | Dotter-managed Unix config with explicit tab keybinds and macOS default unbinds |
+| [ghostty.md](terminal/ghostty.md) | Terminal emulator package | Dotter-rendered Unix config with automatic platform defaults and macOS Command-to-Meta navigation |
 | [tmux.md](terminal/tmux.md) | Shell multiplexer/keybinding owner | Owns bare `Alt` pane, tmux-window, and tmux-session navigation inside the shell |
 | [zellij.md](terminal/zellij.md) | Adjacent multiplexer config | Repo-maintained but not installed, deployed, or wired into post hooks |
 
@@ -90,7 +90,7 @@ These bindings are not tmux navigation bindings, so they may remain outside the 
 
 [wezterm.md](terminal/wezterm.md) covers the WezTerm terminal emulator package. WezTerm must implement terminal-tab bindings with the platform terminal modifier: `Shift+Command+t`, `Shift+Command+w`, `Shift+Command+,`, and `Shift+Command+.` on macOS, with `Command` replaced by `Alt` on Windows and Linux. WezTerm-specific background controls should also avoid bare `Alt` so they do not compete with tmux.
 
-[ghostty.md](terminal/ghostty.md) covers the Ghostty terminal emulator package. Ghostty must explicitly define terminal-tab bindings with the platform terminal modifier and unbind macOS-style default tab/window shortcuts that conflict with this repo's model. Ghostty supports `keybind = trigger=action`, `unbind`, and tab actions such as `new_tab`, `previous_tab`, and `next_tab`.
+[ghostty.md](terminal/ghostty.md) covers the Ghostty terminal emulator package. Dotter selects macOS Command or Linux Alt automatically for clipboard shortcuts and, combined with Shift, terminal-tab bindings. On macOS, Command+h/j/k/l, comma, period, brackets, t, and w explicitly send CSI-u Meta sequences to tmux, with each binding preceded by its matching unbind. Linux output omits these Command bindings and unbinds. Ghostty does not globally remap Command to Alt. Unrelated defaults remain available. Ghostty supports `keybind = trigger=action`, `unbind`, and tab actions such as `new_tab`, `previous_tab`, and `next_tab`.
 
 [tmux.md](terminal/tmux.md) covers the maintained shell multiplexer package. tmux is not a terminal emulator package, but it owns the bare `Alt` navigation layer that terminal emulator packages must preserve.
 

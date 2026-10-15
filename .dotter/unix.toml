@@ -12,7 +12,9 @@
 "packages/wezterm" = "~/.config/wezterm"
 
 [ghostty.files]
-"packages/ghostty" = "~/.config/ghostty"
+"packages/ghostty/config.ghostty.tmpl" = { type = "template", target = "~/.config/ghostty/config.ghostty" }
+"packages/ghostty/themes" = { type = "symbolic", target = "~/.config/ghostty/themes" }
+"packages/ghostty/backdrops" = { type = "symbolic", target = "~/.config/ghostty/backdrops" }
 
 [zsh.files]
 "packages/zsh/.zshrc" = "~/.zshrc"

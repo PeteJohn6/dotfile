@@ -112,7 +112,7 @@ These are the config packages currently maintained in this repository and refere
 | `powershell` | Modular PowerShell profile and helper modules | Windows |
 | `alacritty` | Templated Alacritty config, shared themes, and a Windows WSL profile that follows the user's default WSL distribution | Linux, macOS, Windows |
 | `wezterm` | Modular WezTerm config with imported theme, fallback font stack, and backdrop image system | Linux, macOS, Windows |
-| `ghostty` | Ghostty config with custom theme, fallback font stack, keybinds, and static backdrop; installed only on macOS through Homebrew cask | Linux, macOS |
+| `ghostty` | Dotter-rendered config with automatic platform tab shortcuts and font defaults, custom theme, and static backdrop; installed only on macOS through Homebrew cask | Linux, macOS |
 
 ## Software Install Lists
 
