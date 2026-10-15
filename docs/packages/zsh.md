@@ -33,6 +33,8 @@ This guide explains the repo-managed zsh package under `packages/zsh/`. The pack
 
 Set `PROFILE_DEBUG=1` before sourcing `.zshrc` to print either the minimal-mode reason or the loaded module list.
 
+After the minimal-session checks, `.zshrc` initializes the zsh completion system with `autoload -Uz compinit` and `compinit` before loading modules. This makes `compdef` available when the Docker module sources its completion cache.
+
 Module ordering is dependency-oriented:
 
 - `05-utils.zsh` defines `test_command`, `profile_warn`, and `PROFILE_CACHE_DIR`.
