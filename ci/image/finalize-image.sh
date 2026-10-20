@@ -68,6 +68,9 @@ if [[ "${#remaining_links[@]}" -gt 0 ]]; then
     exit 1
 fi
 
+cp -aL "$HOME_DIR/.config/zsh/conf.d" "$HOME_DIR/conf.d"
+echo "[image-finalize] Materialized zsh runtime modules: conf.d"
+
 case "$WORKSPACE_ROOT" in
     ""|"/")
         echo "[image-finalize] ERROR: Refusing to delete unsafe workspace root: '$WORKSPACE_ROOT'" >&2

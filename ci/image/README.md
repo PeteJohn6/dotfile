@@ -8,6 +8,10 @@ This directory defines the repository's prebuilt Ubuntu runtime image that alrea
 
 The Docker build context is the repository root, not `ci/image/`, because the build consumes the real workflow inputs under `.dotter/`, `packages/`, `bootstrap/`, `script/`, `justfile`, and `bootstrap-up.sh`.
 
+## Runtime Layout
+
+The finalized image keeps the deployed zsh source modules under `/root/.config/zsh/conf.d` and also copies them to `/root/conf.d`. `/root/.zshrc` loads that `/root/conf.d` runtime directory, so zsh starts with the same modules after `/workspace` has been removed from the image.
+
 ## Local Build
 
 From the repository root:

@@ -107,7 +107,7 @@ These are the config packages currently maintained in this repository and refere
 |---------|-------------|-----------|
 | `git` | Git config, global ignore rules, and gitattributes | Linux, macOS, Windows |
 | `nvim` | Neovim configuration | Linux, macOS, Windows |
-| `zsh` | Modular zsh profile with completion initialization and helper modules | Linux, macOS |
+| `zsh` | Modular zsh profile with completion initialization, helper modules, and optional nvm loading when its script is available | Linux, macOS |
 | `starship` | Shared Starship prompt symbols/config | Linux, macOS, Windows |
 | `tmux` | Modular tmux config with TPM bootstrap in post-install | Linux, macOS |
 | `powershell` | Modular PowerShell profile and helper modules | Windows |
