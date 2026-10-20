@@ -52,11 +52,6 @@ typeset utils_path="${PROFILE_ROOT}/conf.d/05-utils.zsh"
 if [[ -f "$utils_path" ]]; then
   if source "$utils_path"; then
     print "  [OK] 05-utils.zsh loaded successfully"
-    if test_command zsh; then
-      print "  [OK] test_command helper works"
-    else
-      print "  [ERROR] test_command helper returned unexpected result"
-    fi
   else
     print "  [ERROR] Failed to load 05-utils.zsh"
   fi

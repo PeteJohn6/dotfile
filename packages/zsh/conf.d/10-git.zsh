@@ -3,16 +3,8 @@
 # =============================================================================
 # Git shortcuts and utilities
 
-if ! typeset -f test_command >/dev/null 2>&1; then
-  test_command() { command -v "$1" >/dev/null 2>&1; }
-fi
-
-if ! typeset -f profile_warn >/dev/null 2>&1; then
-  profile_warn() { print -u2 -- "$1"; }
-fi
-
 # Guard: Return if git is not available
-if ! test_command git; then
+if ! command -v git >/dev/null 2>&1; then
   profile_warn "[conf.d/10-git.zsh] Skipping: 'git' command not found in PATH"
   return 0
 fi
@@ -27,7 +19,7 @@ gitwt() { git worktree "$@"; }
 
 _git_require_fzf() {
   local caller="$1"
-  if ! test_command fzf; then
+  if ! command -v fzf >/dev/null 2>&1; then
     profile_warn "${caller}: fzf not found in PATH"
     return 1
   fi

@@ -3,12 +3,6 @@
 # =============================================================================
 # Provides common helper functions for all profile modules
 
-# test_command: Check if a command exists in PATH
-test_command() {
-  [[ $# -eq 1 ]] || return 1
-  (( $+commands[$1] ))
-}
-
 # profile_warn: Consistent warning output helper
 profile_warn() {
   print -u2 -- "$1"

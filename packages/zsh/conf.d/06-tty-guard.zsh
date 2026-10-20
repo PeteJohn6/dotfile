@@ -4,15 +4,7 @@
 # Exit interactive shells that have lost their backing PTY. This avoids
 # orphaned tmux shells spinning on a deleted /dev/pts entry.
 
-if ! typeset -f test_command >/dev/null 2>&1; then
-  test_command() { command -v "$1" >/dev/null 2>&1; }
-fi
-
-if ! typeset -f profile_warn >/dev/null 2>&1; then
-  profile_warn() { print -u2 -- "$1"; }
-fi
-
-if ! test_command readlink; then
+if ! command -v readlink >/dev/null 2>&1; then
   return 0
 fi
 

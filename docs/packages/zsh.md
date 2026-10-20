@@ -20,6 +20,7 @@ This guide explains the repo-managed zsh package under `packages/zsh/`. The pack
 | `packages/zsh/conf.d/10-git.zsh` | Git shortcuts and worktree helpers |
 | `packages/zsh/conf.d/15-tmux.zsh` | `tmux -u` wrapper |
 | `packages/zsh/conf.d/20-docker.zsh` | Docker and `fzf` helpers plus completion cache |
+| `packages/zsh/conf.d/25-devcontainer.zsh` | Dev Container CLI alias and interactive command submission |
 | `packages/zsh/test/` | Package diagnostics |
 
 ## Configuration Model
@@ -37,12 +38,15 @@ After the minimal-session checks, `.zshrc` initializes the zsh completion system
 
 Module ordering is dependency-oriented:
 
-- `05-utils.zsh` defines `test_command`, `profile_warn`, and `PROFILE_CACHE_DIR`.
+Modules depend on the shared helpers defined by `05-utils.zsh`; they do not define fallback copies. When sourcing a module in a fresh shell for diagnostics, source `05-utils.zsh` first.
+
+- `05-utils.zsh` defines `profile_warn` and `PROFILE_CACHE_DIR`. Modules check command availability directly with `command -v`.
 - `06-tty-guard.zsh` exits orphaned interactive shells whose file descriptors point at deleted PTYs.
 - `07-starship.zsh` initializes Starship only when the binary is available.
 - `10-git.zsh` exports Git helpers only when `git` is available.
 - `15-tmux.zsh` wraps `tmux` as `tmux -u` only when tmux is available.
 - `20-docker.zsh` exports Docker helpers only when `docker` is available.
+- `25-devcontainer.zsh` defines `devc` as an alias for `devcontainer` and wraps the interactive `accept-line` widget for `devcx` only when `devcontainer` is available, independently of the Docker module.
 
 ## Exported Helpers
 
@@ -59,6 +63,18 @@ Module ordering is dependency-oriented:
 | `gitwts` | Interactive worktree selector with `fzf` |
 | `gitwtr` | Interactive worktree remover with `fzf` and confirmation |
 | `tmux` | Wrapper that runs `command tmux -u "$@"` |
+| `devc` | Alias for `devcontainer`; for example, `devc up --workspace-folder .` |
+| `devcx ...` | Interactive input prefix that submits the remaining input to Bash in the current project's container |
+
+The Dev Container CLI is optional and is not installed by the package lists. If it is missing, the module warns and skips defining its alias and widget. Install it separately, then start a new shell or source the module again.
+
+## Dev Container Input
+
+From the project directory, enter `devcx npm install && npm test` to execute the entire command in the container's Bash. Pipes, redirects, and variable expansion also run there; individual arguments follow normal Bash quoting rules. The host must have Bash available.
+
+`devcx` must be the first word of interactive input; leading spaces or tabs are allowed. Scripts should use `devcontainer exec` explicitly.
+
+Multiline input is submitted together. Incomplete commands remain editable for continuation; Ctrl-C cancels. Syntax errors display a diagnostic. History preserves the original `devcx ...` input for recall and editing.
 
 Docker helpers use the `dockerf*` naming convention for `fzf`-powered commands.
 

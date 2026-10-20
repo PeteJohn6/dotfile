@@ -97,6 +97,7 @@ just uninstall
 
 ## Shell shortcut
 
+When the Dev Container CLI is available, zsh provides `devc` as an alias for `devcontainer`. In an interactive terminal, enter `devcx npm install && npm test` to run the entire command in the current project's development container without quoting the whole command. The Dev Container CLI must be installed separately; the module warns and skips loading when it is missing. See [the zsh package guide](docs/packages/zsh.md) for shell helpers and multiline input behavior.
 
 ## Maintained Config Packages
 
