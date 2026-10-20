@@ -12,10 +12,18 @@ if [[ "$OSTYPE" == linux* ]]; then
     export PATH="$_profile_local_bin:$PATH"
   fi
 
-  export NVM_DIR="$HOME/.nvm"
+fi
 
-  [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
-  [[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
+# nvm is a sourced shell function, so check its script before initializing it.
+if [[ "$OSTYPE" == linux* || "$OSTYPE" == darwin* ]]; then
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+
+  if [[ -s "$NVM_DIR/nvm.sh" && -r "$NVM_DIR/nvm.sh" ]]; then
+    source "$NVM_DIR/nvm.sh"
+    if [[ -s "$NVM_DIR/bash_completion" && -r "$NVM_DIR/bash_completion" ]]; then
+      source "$NVM_DIR/bash_completion"
+    fi
+  fi
 fi
 
 return 0

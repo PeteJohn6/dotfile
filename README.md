@@ -97,6 +97,7 @@ just uninstall
 
 ## Shell shortcut
 
+When the Dev Container CLI is available, zsh provides `devc` as an alias for `devcontainer`. In an interactive terminal, enter `devcx npm install && npm test` to run the entire command in the current project's development container without quoting the whole command. The Dev Container CLI must be installed separately; the module warns and skips loading when it is missing. See [the zsh package guide](docs/packages/zsh.md) for shell helpers and multiline input behavior.
 
 ## Maintained Config Packages
 
@@ -106,13 +107,13 @@ These are the config packages currently maintained in this repository and refere
 |---------|-------------|-----------|
 | `git` | Git config, global ignore rules, and gitattributes | Linux, macOS, Windows |
 | `nvim` | Neovim configuration | Linux, macOS, Windows |
-| `zsh` | Modular zsh profile and helper modules | Linux, macOS |
+| `zsh` | Modular zsh profile with completion initialization, helper modules, and optional nvm loading when its script is available | Linux, macOS |
 | `starship` | Shared Starship prompt symbols/config | Linux, macOS, Windows |
 | `tmux` | Modular tmux config with TPM bootstrap in post-install | Linux, macOS |
 | `powershell` | Modular PowerShell profile and helper modules | Windows |
 | `alacritty` | Templated Alacritty config, shared themes, and a Windows WSL profile that follows the user's default WSL distribution | Linux, macOS, Windows |
 | `wezterm` | Modular WezTerm config with imported theme, fallback font stack, and backdrop image system | Linux, macOS, Windows |
-| `ghostty` | Ghostty config with custom theme, fallback font stack, keybinds, and static backdrop; installed only on macOS through Homebrew cask | Linux, macOS |
+| `ghostty` | Dotter-rendered config with automatic platform tab shortcuts and font defaults, custom theme, and static backdrop; installed only on macOS through Homebrew cask | Linux, macOS |
 
 ## Software Install Lists
 

@@ -3,23 +3,15 @@
 # =============================================================================
 # Docker utilities and interactive container management with fzf
 
-if ! typeset -f test_command >/dev/null 2>&1; then
-  test_command() { command -v "$1" >/dev/null 2>&1; }
-fi
-
-if ! typeset -f profile_warn >/dev/null 2>&1; then
-  profile_warn() { print -u2 -- "$1"; }
-fi
-
 # Guard: Return if docker is not available
-if ! test_command docker; then
+if ! command -v docker >/dev/null 2>&1; then
   profile_warn "[conf.d/20-docker.zsh] Skipping: 'docker' command not found in PATH"
   return 0
 fi
 
 _docker_require_fzf() {
   local caller="$1"
-  if ! test_command fzf; then
+  if ! command -v fzf >/dev/null 2>&1; then
     profile_warn "${caller}: fzf not found in PATH"
     return 1
   fi
@@ -160,7 +152,7 @@ _docker_completion_needs_regen() {
   zstat -A file_stat +mtime -- "$completion_file" 2>/dev/null || return 0
 
   now="${EPOCHSECONDS:-}"
-  if [[ -z "$now" ]] && test_command date; then
+  if [[ -z "$now" ]] && command -v date >/dev/null 2>&1; then
     now="$(date +%s 2>/dev/null || true)"
   fi
   [[ -z "$now" ]] && return 0

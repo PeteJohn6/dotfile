@@ -6,7 +6,7 @@ Package guides are current configuration references. They explain how a package 
 
 ## Documentation Boundary
 
-`docs/packages/<package>.md` should contain:
+Package guides under `docs/packages/<package>.md` or `docs/packages/<group>/<package>.md` should contain:
 
 - current design and configuration model
 - key decisions and package layout
@@ -89,7 +89,7 @@ Current package-specific post hooks:
 | --- | --- |
 | `packages/post/nvim.sh` | [nvim.md](nvim.md) |
 | `packages/post/nvim.ps1` | [nvim.md](nvim.md) |
-| `packages/post/tmux.sh` | [tmux.md](tmux.md) |
+| `packages/post/tmux.sh` | [terminal.md](terminal.md) |
 
 ## Maintained Config Packages
 
@@ -107,15 +107,17 @@ Treat package changes in terms of the user-workflow stage they affect: install, 
 
 Current package guides:
 
+Terminal emulator and adjacent multiplexer packages route through [terminal.md](terminal.md).
+
 | Package | Guide | Workflow role |
 | --- | --- | --- |
-| `alacritty` | [alacritty.md](alacritty.md) | Dotter-managed terminal config; installed on macOS and Windows |
-| `ghostty` | [ghostty.md](ghostty.md) | Dotter-managed Unix terminal config; installed on macOS through Homebrew cask |
+| `alacritty` | [terminal.md](terminal.md) | Dotter-managed terminal config; installed on macOS and Windows |
+| `ghostty` | [terminal.md](terminal.md) | Dotter-managed Unix terminal config; installed on macOS through Homebrew cask |
 | `git` | [git.md](git.md) | Dotter-managed global Git config; installed on desktop and container profiles |
 | `nvim` | [nvim.md](nvim.md) | Dotter-managed Neovim config with Unix pre-install and post hooks |
 | `powershell` | [powershell.md](powershell.md) | Dotter-managed Windows PowerShell profile |
 | `starship` | [starship.md](starship.md) | Dotter-managed Starship symbol config with Unix pre-install support |
-| `tmux` | [tmux.md](tmux.md) | Dotter-managed Unix tmux config with a post hook |
-| `wezterm` | [wezterm.md](wezterm.md) | Dotter-managed terminal config; installed on macOS and Windows |
-| `zellij` | [zellij.md](zellij.md) | Repo-maintained config that is not wired into install or Dotter |
+| `tmux` | [terminal.md](terminal.md) | Dotter-managed Unix tmux config with a post hook |
+| `wezterm` | [terminal.md](terminal.md) | Dotter-managed terminal config; installed on macOS and Windows |
+| `zellij` | [terminal.md](terminal.md) | Repo-maintained config that is not wired into install or Dotter |
 | `zsh` | [zsh.md](zsh.md) | Dotter-managed Unix shell profile; installed on desktop and container profiles |

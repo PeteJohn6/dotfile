@@ -23,6 +23,10 @@ if (( ${#_profile_skip_reasons[@]} > 0 )); then
   return 0
 fi
 
+# Initialize completion before modules register their completions.
+autoload -Uz compinit
+compinit
+
 # === Auto-load conf.d modules ===
 typeset -ga _profile_loaded_modules=()
 typeset -ga _profile_failed_modules=()
