@@ -115,6 +115,8 @@ These are the config packages currently maintained in this repository and refere
 | `wezterm` | Modular WezTerm config with imported theme, fallback font stack, and backdrop image system | Linux, macOS, Windows |
 | `ghostty` | Dotter-rendered config with automatic platform tab shortcuts and font defaults, light themes, and optional static backdrop; installed only on macOS through Homebrew cask | Linux, macOS |
 
+Neovim requires version 0.12 or later and uses native Treesitter highlighting and node selection. Parser libraries and queries come from a separately built bundle at `stdpath("data")/treesitter-bundle`. Neovim installation and post hooks do not install `nvim-treesitter` or the Tree-sitter CLI. See [the Neovim package guide](docs/packages/nvim.md#treesitter) for the artifact layout and migration steps.
+
 Neovim comment mappings use `Comment.nvim` without the Treesitter context-commentstring integration. See [the Neovim package guide](docs/packages/nvim.md) for configuration details.
 
 ## Software Install Lists

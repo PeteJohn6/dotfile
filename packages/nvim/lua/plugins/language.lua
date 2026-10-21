@@ -21,7 +21,6 @@ local lsp_keymaps = {
 
 local languagePluginConfig = {
     base = {
-        treesitter = { "toml", "yaml", "json" },
         formatter = {
             prettier = {
                 filetypes = { "json" },
@@ -51,7 +50,6 @@ local languagePluginConfig = {
     },
     -- Web/React Development
     web = {
-        treesitter = { "html", "css", "javascript", "typescript", "tsx", "json" },
         formatter = {
             prettier = {
                 filetypes = { "javascript", "typescript", "javascriptreact", "typescriptreact", "css", "html", "json" },
@@ -85,7 +83,6 @@ local languagePluginConfig = {
 
     -- Lua/Neovim Development
     lua = {
-        treesitter = { "lua", "vim", "vimdoc" },
         formatter = { "stylua" },
         linter = { "luac" },
         lsp = {
@@ -108,7 +105,6 @@ local languagePluginConfig = {
 
     -- solidity development
     solidity = {
-        treesitter = { "solidity" },
         -- formatter = {
         --     ["vscode-solidity-server"] = {
         --         filetypes = { "solidity" }
@@ -128,8 +124,6 @@ local languagePluginConfig = {
 
     -- rust development
     rust = {
-        treesitter = { "rust", "toml" },
-
         formatter = {
             rustfmt = {
                 filetypes = { "rust" },
@@ -162,57 +156,10 @@ local languagePluginConfig = {
     }
 }
 
-local treesitter = {
-    "nvim-treesitter/nvim-treesitter",
+local autotag = {
+    "windwp/nvim-ts-autotag",
     event = { "BufReadPre", "BufNewFile" },
-    cmd = { "TSInstall", "TSBufEnable", "TSBufDisable", "TSModuleInfo" },
-    build = ":TSUpdate",
-    dependencies = {
-        "windwp/nvim-ts-autotag",
-    },
-    opts = function()
-        local ensure_installed = {}
-        -- Extract treesitter parsers from language configs
-        for _, lang_config in pairs(languagePluginConfig) do
-            if lang_config.treesitter then
-                for k, v in pairs(lang_config.treesitter) do
-                    if type(k) == "number" then
-                        table.insert(ensure_installed, v)
-                    else
-                        table.insert(ensure_installed, k)
-                    end
-                end
-            end
-        end
-        return {
-            highlight = {
-                enable = true,
-            },
-            -- Install parsers synchronously (only applied to `ensure_installed`)
-            sync_install = false,
-            -- ensure these language parsers are installed
-            ensure_installed = ensure_installed,
-
-            -- Automatically install missing parsers when entering buffer
-            -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
-            auto_install = true,
-
-            -- enable indentation
-            indent = { enable = true },
-
-            -- enable autotagging (w/ nvim-ts-autotag plugin)
-            autotag = { enable = true },
-            incremental_selection = {
-                enable = true,
-                keymaps = {
-                    init_selection = "<C-space>",
-                    node_incremental = "<C-space>",
-                    scope_incremental = false,
-                    node_decremental = "<bs>",
-                },
-            },
-        }
-    end,
+    opts = {},
 }
 
 local mason = {
@@ -282,7 +229,6 @@ local linter = {
         -- extract linters from language configs
         local needed_linter = {}
         local linters_by_ft = {}
-        -- Extract treesitter parsers from language configs
         -- transform linter config to nvim-lint format
         -- filetype: linter with { languages } => language with { linters }
 
@@ -336,7 +282,6 @@ local formatter = {
     config = function()
         local needed_formatter = {}
         local formatter_by_ft = {}
-        -- Extract treesitter parsers from language configs
         -- transform formatter config to conform format
         -- filetype: formatter with { languages } => language with { formatters }
         --    prettier = {
@@ -553,4 +498,4 @@ local trouble = {
 }
 
 
-return { treesitter, linter, formatter, lsp, lsp_progress, trouble }
+return { autotag, linter, formatter, lsp, lsp_progress, trouble }
