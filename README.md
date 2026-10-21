@@ -115,6 +115,8 @@ These are the config packages currently maintained in this repository and refere
 | `wezterm` | Modular WezTerm config with imported theme, fallback font stack, and backdrop image system | Linux, macOS, Windows |
 | `ghostty` | Dotter-rendered config with automatic platform tab shortcuts and font defaults, light themes, and optional static backdrop; installed only on macOS through Homebrew cask | Linux, macOS |
 
+Neovim comment mappings use `Comment.nvim` without the Treesitter context-commentstring integration. See [the Neovim package guide](docs/packages/nvim.md) for configuration details.
+
 ## Software Install Lists
 
 The package lists under `packages/` are broader than the maintained config packages above:

@@ -39,6 +39,8 @@ That structure keeps the package understandable at the feature level. A contribu
 
 `lua/plugins/language.lua` is intentionally configuration-driven. It centralizes Treesitter parser lists, formatter mappings, linter mappings, and LSP server metadata used by Mason and `lspconfig`.
 
+`lua/plugins/comment.lua` uses `Comment.nvim` for the existing comment mappings without `nvim-ts-context-commentstring`. Comment syntax follows `Comment.nvim` and the buffer's `commentstring`; Treesitter-based switching between embedded language regions is not configured.
+
 ## Lifecycle Integration
 
 | Stage | Current behavior |

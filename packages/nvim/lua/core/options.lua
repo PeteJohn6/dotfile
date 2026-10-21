@@ -42,7 +42,7 @@ opt.cursorline = true
 
 -- appearance
 opt.termguicolors = true
--- opt.background = "dark"
+opt.background = "light"
 
 -- backspace
 opt.backspace = "indent,eol,start" -- allow backspace on indent, end of line or insert mode start position
