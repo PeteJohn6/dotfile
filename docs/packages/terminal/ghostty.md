@@ -7,16 +7,17 @@ Ghostty is a Dotter-managed Unix config package. The host install list installs 
 ## Design Intent
 
 - Generate a plain Ghostty config from a Dotter template because Ghostty's native config is simple `key = value` syntax, not a programmable config language.
-- Mirror the repo-managed terminal visual baseline where Ghostty has direct equivalents: custom palette, fallback font stack, zero padding, hidden scrollbar, blinking block cursor, right-click paste, no copy-on-select, and a static backdrop.
+- Mirror the repo-managed terminal visual baseline where Ghostty has direct equivalents: light palette, bold fallback font stack, zero padding, hidden scrollbar, blinking block cursor, right-click paste, no copy-on-select, and an optional static backdrop.
 - Preserve the shared terminal interaction bindings where Ghostty supports them: `F11` fullscreen, `Ctrl+N` new window, and clipboard shortcuts using Command on macOS or Alt on Linux.
 - Select terminal-tab shortcuts, font size, and platform CJK fallback automatically for macOS and Linux, following the shared model in [terminal.md](../terminal.md).
-- Use one static background image instead of porting the WezTerm Lua backdrop selector.
+- Keep the static background image disabled by default instead of porting the WezTerm Lua backdrop selector.
 
 ## Structure
 
 | Path | Role |
 | --- | --- |
 | `packages/ghostty/config.ghostty.tmpl` | Dotter-rendered Ghostty entrypoint deployed as `~/.config/ghostty/config.ghostty` |
+| `packages/ghostty/themes/rose-pine-dawn`, `ayu-light`, `mac-clear-light` | Light themes; Rose Pine Dawn is the default |
 | `packages/ghostty/themes/custom` | WezTerm-derived theme translated to Ghostty color and palette syntax |
 | `packages/ghostty/backdrops/pastel-samurai.acrylic.png` | Static background image reused from the WezTerm package |
 
@@ -27,7 +28,7 @@ Dotter renders `packages/ghostty/config.ghostty.tmpl` before Ghostty reads it. T
 | Setting | macOS | Linux |
 | --- | --- | --- |
 | Terminal-tab modifier, combined with Shift | `super` (Command) | `alt` |
-| Font size | `18` | `13` |
+| Font size | `16` | `13` |
 | Platform CJK fallback | `PingFang SC` | `Noto Sans CJK SC` |
 
 Platform selection does not require local variables. The four tab shortcuts are defined directly by platform in the template; `ghostty_terminal_modifier` is no longer read. In Ghostty, `super` is the canonical name for macOS Command; `cmd` and `command` are aliases.
@@ -40,17 +41,20 @@ Ghostty loads `config.ghostty` from `$XDG_CONFIG_HOME/ghostty/`, or from `~/.con
 
 ```text
 ~/.config/ghostty/config.ghostty
+~/.config/ghostty/themes/rose-pine-dawn
+~/.config/ghostty/themes/ayu-light
+~/.config/ghostty/themes/mac-clear-light
 ~/.config/ghostty/themes/custom
 ~/.config/ghostty/backdrops/pastel-samurai.acrylic.png
 ```
 
-The `theme = custom` setting relies on Ghostty's theme lookup under `~/.config/ghostty/themes/`. The `background-image = backdrops/pastel-samurai.acrylic.png` setting uses a relative path, so `backdrops/` must remain beside `config.ghostty`.
+The `theme = rose-pine-dawn` setting relies on Ghostty's theme lookup under `~/.config/ghostty/themes/`. The commented `background-image = backdrops/pastel-samurai.acrylic.png` setting uses a relative path when enabled, so `backdrops/` must remain beside `config.ghostty`.
 
 On macOS, Ghostty loads XDG config first and then loads config under `~/Library/Application Support/com.mitchellh.ghostty/`. If a file exists in that macOS-specific directory, later conflicting values there can override this Dotter-managed XDG config.
 
 ## Background Boundaries
 
-Ghostty background images require Ghostty 1.2.0 or newer and currently support PNG or JPEG files. This package uses `backdrops/pastel-samurai.acrylic.png` with `background-image-fit = cover`, centered positioning, no repeat, and `background-image-opacity = 0.3`.
+Ghostty background images require Ghostty 1.2.0 or newer and currently support PNG or JPEG files. The disabled backdrop settings reference `backdrops/pastel-samurai.acrylic.png` with `background-image-fit = cover`, centered positioning, no repeat.
 
 Because Ghostty applies the background image per terminal surface, split-heavy layouts may repeat the image across splits. Large images can also increase VRAM use. This package does not include WezTerm's dynamic background selector, acrylic mode, or Lua backdrop controller.
 
@@ -113,15 +117,15 @@ The `@macos` selector keeps Ghostty out of Linux and Windows package-manager ins
 
 ## Validation Notes
 
-When validating this package, use Dotter dry-runs to confirm the rendered config target and asset directory targets. Render a fresh profile on macOS and Linux: macOS should produce size `18`, `PingFang SC`, and `shift+super` tab shortcuts; Linux should produce size `13`, `Noto Sans CJK SC`, and `shift+alt` tab shortcuts without macOS Command bindings or unbinds. Render on each platform to check its branch.
+When validating this package, use Dotter dry-runs to confirm the rendered config target and asset directory targets. Render a fresh profile on macOS and Linux: macOS should produce size `16`, `PingFang SC`, and `shift+super` tab shortcuts; Linux should produce size `13`, `Noto Sans CJK SC`, and `shift+alt` tab shortcuts without macOS Command bindings or unbinds. Render on each platform to check its branch.
 
-On a machine with Ghostty installed, inspect the final effective keybinding map with `ghostty +list-keybinds` using the isolated config, as well as the generated lines. The macOS render must contain all ten Super CSI actions above, all four Shift+Super tab actions, and Super clipboard actions. The Linux render must contain all four Shift+Alt tab actions and Alt clipboard actions, with no custom Super CSI bindings. The ten reserved bare Alt navigation keys must reach tmux. `ghostty +list-keybinds --default` shows native defaults rather than proving the generated bindings are effective. Starting Ghostty can additionally check the custom theme, fallback fonts, keybinds, hidden scrollbar, zero padding, right-click paste, and static background image.
+On a machine with Ghostty installed, inspect the final effective keybinding map with `ghostty +list-keybinds` using the isolated config, as well as the generated lines. The macOS render must contain all ten Super CSI actions above, all four Shift+Super tab actions, and Super clipboard actions. The Linux render must contain all four Shift+Alt tab actions and Alt clipboard actions, with no custom Super CSI bindings. The ten reserved bare Alt navigation keys must reach tmux. `ghostty +list-keybinds --default` shows native defaults rather than proving the generated bindings are effective. Starting Ghostty can additionally check the light theme, bold fallback fonts, keybinds, hidden scrollbar, zero padding, right-click paste, and optional static background image.
 
 ## Common Failure Modes
 
 - Ghostty is older than 1.2.0, so background image options are unsupported.
-- `themes/custom` is not beside the config directory, so `theme = custom` cannot resolve.
-- `backdrops/pastel-samurai.acrylic.png` is not beside `config.ghostty`, so the background image path fails.
+- `themes/rose-pine-dawn` is not beside the config directory, so `theme = rose-pine-dawn` cannot resolve.
+- `backdrops/pastel-samurai.acrylic.png` is not beside `config.ghostty`, so the background image path fails when enabled.
 - One or more configured fonts are not installed, causing Ghostty to fall back to another family.
 - A macOS-specific Ghostty config exists under `~/Library/Application Support/com.mitchellh.ghostty/` and overrides the Dotter-managed XDG config.
 - Dotter is older than 0.13.4 and does not provide the platform booleans used by the template.
