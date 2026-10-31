@@ -117,7 +117,7 @@ These are the config packages currently maintained in this repository and refere
 
 Neovim requires version 0.12 or later and uses native Treesitter highlighting and node selection. Parser libraries and queries come from a separately built bundle at `stdpath("data")/treesitter-bundle`. Neovim installation and post hooks do not install `nvim-treesitter` or the Tree-sitter CLI. See [the Neovim package guide](docs/packages/nvim.md#treesitter) for the artifact layout and migration steps.
 
-Neovim comment mappings use `Comment.nvim` without the Treesitter context-commentstring integration. See [the Neovim package guide](docs/packages/nvim.md) for configuration details.
+Neovim comment mappings use `Comment.nvim` without the Treesitter context-commentstring integration. Telescope follows the upstream default branch; update it with `:Lazy update telescope.nvim` and restart Neovim. See [the Neovim package guide](docs/packages/nvim.md) for configuration details.
 
 ## Software Install Lists
 

@@ -42,6 +42,8 @@ That structure keeps the package understandable at the feature level. A contribu
 
 `lua/plugins/comment.lua` uses `Comment.nvim` for the existing comment mappings without `nvim-ts-context-commentstring`. Comment syntax follows `Comment.nvim` and the buffer's `commentstring`; Treesitter-based switching between embedded language regions is not configured.
 
+Telescope follows the latest commit on the upstream default branch. Run `:Lazy update telescope.nvim` and restart Neovim to update an existing installation; the local `lazy-lock.json` records the installed revision.
+
 ## Treesitter
 
 The maintained config requires Neovim 0.12 or later and uses its native Treesitter API. It does not install `nvim-treesitter`, invoke the Tree-sitter CLI, or manage parser versions. Parser compilation and query packaging belong to a separate artifact project.

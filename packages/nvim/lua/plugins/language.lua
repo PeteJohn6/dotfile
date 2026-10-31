@@ -1,24 +1,3 @@
-local lsp_keymaps = {
-    { mode = "n",          key = "gR",         action = "<cmd>Telescope lsp_references<CR>",       desc = "Show LSP references" },
-    { mode = "n",          key = "gD",         action = vim.lsp.buf.declaration,                   desc = "Go to declaration" },
-    { mode = "n",          key = "gd",         action = "<cmd>Telescope lsp_definitions<CR>",      desc = "Show LSP definitions" },
-    { mode = "n",          key = "gi",         action = "<cmd>Telescope lsp_implementations<CR>",  desc = "Show LSP implementations" },
-    { mode = "n",          key = "gp",         action = "<cmd>Telescope lsp_type_definitions<CR>", desc = "Show LSP type definitions" },
-    { mode = { "n", "v" }, key = "<leader>ca", action = vim.lsp.buf.code_action,                   desc = "See available code actions" },
-    { mode = "n",          key = "<leader>rn", action = vim.lsp.buf.rename,                        desc = "Smart rename" },
-    {
-        mode = "n",
-        key = "<leader>D",
-        action = "<cmd>Telescope diagnostics bufnr=0<CR>",
-        desc = "Show buffer diagnostics",
-    },
-    { mode = "n", key = "<leader>d",  action = vim.diagnostic.open_float, desc = "Show line diagnostics" },
-    { mode = "n", key = "[d",         action = vim.diagnostic.goto_prev,  desc = "Go to previous diagnostic" },
-    { mode = "n", key = "]d",         action = vim.diagnostic.goto_next,  desc = "Go to next diagnostic" },
-    { mode = "n", key = "K",          action = vim.lsp.buf.hover,         desc = "Show documentation for what is under cursor" },
-    { mode = "n", key = "<leader>rs", action = ":LspRestart<CR>",         desc = "Restart LSP" },
-}
-
 local languagePluginConfig = {
     base = {
         formatter = {
@@ -36,17 +15,6 @@ local languagePluginConfig = {
             "yamllint",
             "jsonlint",
         },
-        lsp = {
-            ["json-lsp"] = {
-                mason_lspconfig_name = "jsonls"
-            },
-            ["yaml-language-server"] = {
-                mason_lspconfig_name = "yamlls"
-            },
-            taplo = {
-                filetypes = { "toml" },
-            }
-        }
     },
     -- Web/React Development
     web = {
@@ -60,47 +28,12 @@ local languagePluginConfig = {
                 filetypes = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
             },
         },
-        lsp = {
-            ["html-lsp"] = {
-                mason_lspconfig_name = "html"
-            },
-            ["tailwindcss-language-server"] = {
-                mason_lspconfig_name = "tailwindcss",
-            },
-            ["typescript-language-server"] = {
-                mason_lspconfig_name = "ts_ls",
-            },
-            ["css-lsp"] = {
-                mason_lspconfig_name = "cssls",
-                filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
-            },
-            ["emmet-ls"] = {
-                mason_lspconfig_name = "emmet_ls",
-                filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
-            },
-        }
     },
 
     -- Lua/Neovim Development
     lua = {
         formatter = { "stylua" },
         linter = { "luac" },
-        lsp = {
-            ["lua-language-server"] = {
-                mason_lspconfig_name = "lua_ls",
-                filetypes = { "lua" },
-                settings = {
-                    Lua = {
-                        diagnostics = {
-                            globals = { "vim" },
-                        },
-                        completion = {
-                            callSnippet = "Replace",
-                        },
-                    },
-                },
-            }
-        },
     },
 
     -- solidity development
@@ -113,11 +46,6 @@ local languagePluginConfig = {
         linter = {
             solhint = {
                 filetypes = { "solidity" }
-            }
-        },
-        lsp = {
-            ["nomicfoundation-solidity-language-server"] = {
-                mason_lspconfig_name = "solidity_ls_nomicfoundation"
             }
         },
     },
@@ -137,22 +65,6 @@ local languagePluginConfig = {
             },
         },
 
-        lsp = {
-            rust_analyzer = {
-                mason_lspconfig_name = "rust_analyzer",
-                settings = {
-                    ["rust-analyzer"] = {
-                        cargo = { allFeatures = true },
-                        checkOnSave = { command = "clippy" },
-                        procMacro = { enable = true },
-                    },
-                },
-            },
-            -- optional: TOML for Cargo.toml
-            taplo = {
-                mason_lspconfig_name = "taplo",
-            },
-        },
     }
 }
 
@@ -162,8 +74,14 @@ local autotag = {
     opts = {},
 }
 
+local lazydev = {
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {},
+}
+
 local mason = {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     opts = {
         ui = {
             icons = {
@@ -333,60 +251,20 @@ local lsp = {
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
         { "antosha417/nvim-lsp-file-operations", config = true },
-        { "folke/neodev.nvim",                   opts = {} },
         {
-            "williamboman/mason-lspconfig.nvim", -- mason-lspconfig.nvim closes some gaps that exist between "mason.nvim" and "lspconfig".
+            "mason-org/mason-lspconfig.nvim",
             dependencies = { mason }
         },
         "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
-        local capabilities = require("cmp_nvim_lsp").default_capabilities()
+        local config = require("core.lsp")
+        config.setup()
 
-        local ensure = {}
-
-        for _, lang in pairs(languagePluginConfig or {}) do
-            if not lang.lsp then goto CONTINUE end
-            for name, conf in pairs(lang.lsp) do
-                if type(name) == "number" then
-                    -- 仅字符串形式
-                    table.insert(ensure, conf)
-                else
-                    local server = conf.mason_lspconfig_name or name
-                    table.insert(ensure, server)
-
-                    local cfg = vim.tbl_deep_extend("force", { capabilities = capabilities }, conf)
-                    cfg.mason_lspconfig_name = nil
-                    vim.lsp.config(server, cfg) -- 定义配置，启用时自动用到
-                end
-            end
-            ::CONTINUE::
-        end
-
-        require("mason").setup({})
         require("mason-lspconfig").setup({
-            ensure_installed = ensure,
-            automatic_enable = true, -- 自动 vim.lsp.enable() 已安装的 server
+            ensure_installed = config.servers,
+            automatic_enable = config.servers,
         })
-
-        vim.api.nvim_create_autocmd("LspAttach", {
-            group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-            callback = function(ev)
-                -- Apply all keymaps from the table
-                local keymap = vim.keymap -- for conciseness
-                for _, mapping in pairs(lsp_keymaps) do
-                    local opts = { buffer = ev.buf, silent = true, desc = mapping.desc }
-                    keymap.set(mapping.mode, mapping.key, mapping.action, opts)
-                end
-            end,
-        })
-
-        -- Change the Diagnostic symbols in the sign column (gutter)
-        local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
-        for type, icon in pairs(signs) do
-            local hl = "DiagnosticSign" .. type
-            vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
-        end
     end,
 }
 
@@ -498,4 +376,4 @@ local trouble = {
 }
 
 
-return { autotag, linter, formatter, lsp, lsp_progress, trouble }
+return { autotag, lazydev, linter, formatter, lsp, lsp_progress, trouble }
