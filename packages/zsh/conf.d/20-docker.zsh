@@ -5,7 +5,6 @@
 
 # Guard: Return if docker is not available
 if ! command -v docker >/dev/null 2>&1; then
-  profile_warn "[conf.d/20-docker.zsh] Skipping: 'docker' command not found in PATH"
   return 0
 fi
 
@@ -165,14 +164,15 @@ _docker_setup_completion_cache() {
   local completion_file
 
   typeset -g PROFILE_CACHE_DIR="${PROFILE_CACHE_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/zsh/cache}"
-  mkdir -p -- "$PROFILE_CACHE_DIR" 2>/dev/null || :
+  mkdir -p -- "$PROFILE_CACHE_DIR" 2>/dev/null || return 0
 
   completion_file="${PROFILE_CACHE_DIR}/docker_completion.zsh"
   if _docker_completion_needs_regen "$completion_file"; then
-    docker completion zsh >| "$completion_file" 2>/dev/null || :
+    { docker completion zsh >| "$completion_file"; } 2>/dev/null || :
   fi
 
-  [[ -f "$completion_file" ]] && source "$completion_file"
+  [[ -f "$completion_file" ]] || return 0
+  source "$completion_file"
 }
 
 _docker_setup_completion_cache

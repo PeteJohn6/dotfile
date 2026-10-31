@@ -6,7 +6,7 @@ This guide explains the repo-managed zsh package under `packages/zsh/`. The pack
 
 - Keep `.zshrc` as a small loader and put behavior in ordered `conf.d/` modules.
 - Skip rich profile behavior in sessions that cannot support interactive shell UX.
-- Guard optional tool integrations so missing tools degrade locally rather than breaking profile startup.
+- Silently skip optional tool integrations when their CLI is missing; report missing dependencies only when an interactive helper is invoked.
 - Keep zsh helper behavior close to the PowerShell profile where both shells expose the same workflows.
 
 ## Structure
@@ -34,6 +34,8 @@ This guide explains the repo-managed zsh package under `packages/zsh/`. The pack
 - stdout is not a TTY
 
 Set `PROFILE_DEBUG=1` before sourcing `.zshrc` to print either the minimal-mode reason or the loaded module list.
+
+Sourcing `.zshrc` again resets the module tracking state without printing the previous module path.
 
 After the minimal-session checks, `.zshrc` initializes the zsh completion system with `autoload -Uz compinit` and `compinit` before loading modules. This makes `compdef` available when the Docker module sources its completion cache.
 
@@ -68,7 +70,7 @@ Modules depend on the shared helpers defined by `05-utils.zsh`; they do not defi
 | `devc` | Alias for `devcontainer`; for example, `devc up --workspace-folder .` |
 | `devcx ...` | Interactive input prefix that submits the remaining input to Bash in the current project's container |
 
-The Dev Container CLI is optional and is not installed by the package lists. If it is missing, the module warns and skips defining its alias and widget. Install it separately, then start a new shell or source the module again.
+The Dev Container CLI is optional and is not installed by the package lists. If it is missing, the module silently skips defining its alias and widget. Install it separately, then start a new shell or source the module again.
 
 ## Dev Container Input
 
@@ -93,7 +95,7 @@ When `fzf` is missing, interactive helpers print a clear message and return with
 
 ## Completion Cache
 
-Docker completion is cached at `${XDG_CONFIG_HOME:-$HOME/.config}/zsh/cache/docker_completion.zsh`. The Docker module regenerates the cache when it is missing or older than 30 days. Completion generation failures are ignored so profile startup can continue.
+Docker completion is cached at `${XDG_CONFIG_HOME:-$HOME/.config}/zsh/cache/docker_completion.zsh`. The Docker module regenerates the cache when it is missing or older than 30 days. An unavailable cache directory, failed cache write, or completion generation failure is silently skipped so profile startup can continue. Errors while loading an existing completion script still surface as module load failures.
 
 ## Tmux UTF-8 Behavior
 

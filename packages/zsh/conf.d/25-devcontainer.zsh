@@ -4,7 +4,6 @@
 
 # Guard: Return if devcontainer is not available.
 if ! command -v devcontainer >/dev/null 2>&1; then
-  profile_warn "[conf.d/25-devcontainer.zsh] Skipping: 'devcontainer' command not found in PATH"
   return 0
 fi
 

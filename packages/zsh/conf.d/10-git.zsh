@@ -5,7 +5,6 @@
 
 # Guard: Return if git is not available
 if ! command -v git >/dev/null 2>&1; then
-  profile_warn "[conf.d/10-git.zsh] Skipping: 'git' command not found in PATH"
   return 0
 fi
 

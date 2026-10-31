@@ -33,7 +33,7 @@ typeset -ga _profile_failed_modules=()
 
 typeset -g profile_dir="${PROFILE_ROOT}/conf.d"
 if [[ -d "$profile_dir" ]]; then
-  typeset module
+  typeset module=""
   for module in "$profile_dir"/*.zsh(N); do
     if source "$module"; then
       _profile_loaded_modules+=("${module:t}")
